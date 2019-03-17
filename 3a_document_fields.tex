@@ -1,0 +1,78 @@
+% TODO (Manuel): copy byte sequence definition from ethereum yellow paper
+% TODO (Manuel): Define cryptographic hash function
+% TODO (Lucas): we should add a section that introduces documents etc.
+\section{Document and state commitments}\label{sec:doc_state_comm}
+
+The Centrifuge protocol does not have the concept of a global state for documents. Instead, the state is only shared across collaborators of a single \textit{documents} which is the key component in the protocol.
+A document has a predefined schema to represent a specific document type, like a purchase order or an invoice. A Centrifuge node can create a document and share it with others. The transport of a document happens privately over secure channels in the P2P network. Every document collaborator keeps a local copy of a document in their storage. An update of a document can be triggered by multiple collaborators and is not restricted to the initial document creator. Whenever a change is made, a
+calculated merkle root of a document is committed on chain. A new version is only accepted by others if the document root hash exists in the \textit{AnchorRepository} and the set of mandatory document fields in the new version satisfy protocol-specific requirements.  A formal definition of the individual document components should expound the requirements of a valid new document state. 
+\newline
+\subsection{Conventions}
+TODO
+%\item TODO arrow notation
+%\item TODO lower case in variables
+%\item TODO user,identity,DID,node
+
+Elements of $\mathbb{B}$ are an arbitrary-length byte array. $\mathbb{B}_{32}$ describes the set of 32 byte arrays. 
+\textcolor{gray}{TODO:explain the used notation}.
+\subsection{Document}
+%---------------------------------------------------
+%----- Fields
+%---------------------------------------------------
+\subsubsection{Fields}
+\textcolor{gray}{we need to define that the schema version is defined in the coredoc}
+The smallest unit of a document is called \textit{field}.  
+A field $F$ is a 3-tuple  with a field name defined as $F_\texttt{name}$, a field value defined as $F_\texttt{value}$ and a salt defined as $F_\texttt{salt}$
+\begin{eqnarray}
+F = (F_\texttt{name},F_\texttt{value},F_\texttt{salt}) \\
+\begin{array}[t]{lclclc}
+F_{\texttt{name}} \in \mathbb{B} \wedge F_{\texttt{value}} \in \mathbb{B} \wedge  F_{\texttt{salt}} \in \mathbb{B}_{32} \\
+\end{array}
+\end{eqnarray}
+
+
+\subsubsection{Document}
+A document $d$  can be formally expressed as the union of the schema field set $S$ with a set of core fields called core document denoted as $C$.
+\textcolor{gray}{TODO: add reference to centrifuge-protobufs}
+
+\begin{equation}
+d \equiv S \cup  C
+\end{equation}
+For referring to all schema fields $S$ of document or to the core document fields $C$ we introduce the following notation
+\begin{eqnarray}
+d_S = S \\
+d_C = C
+\end{eqnarray}
+
+\subsubsection{Schema Fields}\label{sec:doc_schema_fields}
+A document $d$ contains a set of fields $S$ described by a document schema. The document schema defines the type of a document. The document schema for an invoice would define the required fields for an invoice.
+The set schema fields $S$ can be defined as
+\begin{equation}
+S = (F_{[0]},...,F_{[n]})\\
+\end{equation}
+In the set of specific fields $S$ for a document $d$, every field has a unique field name $F_{[i]\texttt{name}}$ to identify a member of the set.
+\begin{equation}
+F_{[i]} \in  S \Rightarrow F_{[i]\texttt{name}} \neq  F_{[j]\texttt{name}} \, ; \forall F_{[j]}  \in S, i \neq j 
+\end{equation}
+%\begin{equation}
+%\{x \in \{0..n\}| \nexist y \in \{0..n\}\x: F[x]_i=F[y]_i \land x & \neg & y \}
+%\end{equation}
+
+\subsubsection{Core Document Fields\label{Core Document}}\label{sec:doc_core_doc_fields}
+The core document $C$ defines the required fields for every document $d$.
+The core document contains signatures, hashes, and other relevant information that allows users to exchange any document data.
+ 
+We introduce the fields in $C$ step by step in the following section and define the required constraints of the core document fields. Variables denoted with $R_{\texttt{x}}$  are not part of the core document but are calculated based on core document fields. $R_{\texttt{x}}$ variables are needed for signing and for anchoring documents in the smart contract. A document field which is a core document field is denoted with $d_{\texttt{x}}$. 
+The core document\footnote{\url{https://github.com/centrifuge/centrifuge-protobufs/blob/master/coredocument/coredocument.proto}} includes other fields not mentioned in this section which are introduced in the following sections step by step.
+\begin{description} 
+\item{\textbf{Identifier}} a $\mathbb{B}_{32}$ value defines the unique identifier of a document, formally $d_{\texttt{id}}$ 
+\item{\textbf{Current Version}} a $\mathbb{B}_{32}$ value defines a unique id for the current version of a document, formally as $d_{\texttt{current}}$
+\item{\textbf{Previous Version}} a $\mathbb{B}_{32}$ value needed to refer to the previous version of a document, formally as $d_{\texttt{prev}}$
+\item{\textbf{Next Version Pre Image}} is a $\mathbb{B}_{32}$ value needed to define the next version of a document,  formally as $d_{\texttt{next-img}}$
+\item{\textbf{Next Version}} a $\mathbb{B}_{32}$ value defines a unique identifier for the next version of a document, formally $d_{\texttt{next}}$
+\item{\textbf{Document Root}} a $\mathbb{B}_{32}$ value defines a root hash for document, formally $R_{\texttt{doc-root}}$
+\item{\textbf{Signing Root}} a $\mathbb{B}_{32}$ value defines the root hash of the Merkle tree containing all fields except for the signatures, formally $R_{\texttt{signing}}$
+\item{\textbf{Signatures}} a set of signatures of the signing root denoted as $d_{\texttt{signatures}}$
+\item{\textbf{Previous Root}} a $\mathbb{B}_{32}$ value defines the document hash of the previous version of the document. The previous root denoted as $d_{\texttt{prev-root}}$
+\end{description}
+

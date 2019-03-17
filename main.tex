@@ -1,0 +1,201 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%2345678901234567890123456789012345678901234567890123456789012345678901234567890
+%        1         2         3         4         5         6         7         8
+
+\documentclass[a4paper, 10pt]{article}
+\usepackage[a4paper, margin={2.5cm, 2.5cm}]{geometry}
+
+% The following packages can be found on http:\\www.ctan.org
+%\usepackage{epsfig} % for postscript graphics files
+%\usepackage{mathptmx} % assumes new font selection scheme installed
+%\usepackage{times} % assumes new font selection scheme installed
+\usepackage{listings}
+\usepackage{graphics}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{acro}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{setspace}
+\usepackage{comment}
+\usepackage{mathrsfs}
+\usepackage{tikz}
+
+\usepackage{color} %use color
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\definecolor{pagecolor}{rgb}{1,1,1}
+\pagecolor{pagecolor}
+%Customize a bit the look
+\lstset{ %
+backgroundcolor=\color{pagecolor}, % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+basicstyle=\footnotesize, % the size of the fonts that are used for the code
+breakatwhitespace=false, % sets if automatic breaks should only happen at whitespace
+breaklines=true, % sets automatic line breaking
+captionpos=b, % sets the caption-position to bottom
+commentstyle=\color{mygreen}, % comment style
+deletekeywords={...}, % if you want to delete keywords from the given language
+escapeinside={\%*}{*)}, % if you want to add LaTeX within your code
+extendedchars=true, % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+frame=single, % adds a frame around the code
+keepspaces=true, % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+keywordstyle=\color{blue}, % keyword style
+% language=Octave, % the language of the code
+morekeywords={*,...}, % if you want to add more keywords to the set
+numbers=left, % where to put the line-numbers; possible values are (none, left, right)
+numbersep=5pt, % how far the line-numbers are from the code
+numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+rulecolor=\color{black}, % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+showspaces=false, % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+showstringspaces=false, % underline spaces within strings only
+showtabs=false, % show tabs within strings adding particular underscores
+stepnumber=1, % the step between two line-numbers. If it's 1, each line will be numbered
+stringstyle=\color{mymauve}, % string literal style
+tabsize=2, % sets default tabsize to 2 spaces
+title=\lstname % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+%END of listing package%
+ 
+\definecolor{darkgray}{rgb}{.4,.4,.4}
+\definecolor{purple}{rgb}{0.65, 0.12, 0.82}
+ 
+
+%define Javascript language
+\lstdefinelanguage{JavaScript}{
+keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break},
+keywordstyle=\color{blue}\bfseries,
+ndkeywords={class, export, boolean, throw, implements, import, this},
+ndkeywordstyle=\color{darkgray}\bfseries,
+identifierstyle=\color{black},
+sensitive=false,
+comment=[l]{//},
+morecomment=[s]{/*}{*/},
+commentstyle=\color{purple}\ttfamily,
+stringstyle=\color{red}\ttfamily,
+morestring=[b]',
+morestring=[b]"
+}
+ 
+\lstset{
+language=JavaScript,
+extendedchars=true,
+basicstyle=\footnotesize\ttfamily,
+showstringspaces=false,
+showspaces=false,
+numbers=left,
+numberstyle=\footnotesize,
+numbersep=9pt,
+tabsize=2,
+breaklines=true,
+showtabs=false,
+captionpos=b
+}
+%---------------------------------------------------
+%----- Hyper Setup
+%---------------------------------------------------
+\hypersetup{
+	pdftitle={Centrifuge:  Protocol for private by design transactions on a decentralized network}, 
+    pdfauthor={Lucas Vogelsang,Manuel Polzhofer, Philip Stehlik}, 
+    pdfsubject={Protocol Paper, Centrifuge}, % please, select the type of this document
+    pdfstartview={FitH},    % fits the width of the page to the window
+    pdfnewwindow=true, 		% links in new window
+    colorlinks=true,  		% false: boxed links; true: colored links
+    linkcolor=orange,          % color of internal links
+    citecolor=orange,        % color of links to bibliography
+    filecolor=magenta,      % color of file links
+    urlcolor=black           % color of external links
+}
+% 
+
+
+\makeatletter
+\newcommand*{\xleftrightarrow}[2]{\mathrel{
+  \settowidth{\@tempdima}{$\scriptstyle#1$}
+  \settowidth{\@tempdimb}{$\scriptstyle#2$}
+  \ifdim\@tempdimb>\@tempdima \@tempdima=\@tempdimb\fi
+  \mathop{\vcenter{
+    \offinterlineskip\ialign{\hbox to\dimexpr\@tempdima+1em{##}\cr
+    \rightarrowfill\cr\noalign{\kern.5ex}
+    \leftarrowfill\cr}}}\limits^{\!#1}_{\!#2}}}
+
+
+%---------------------------------------------------
+%----- Helper Commands
+%---------------------------------------------------
+\newcommand{\codesection}[1]{\doublespacing{\hspace{\parindent}\texttt{#1}}}
+\newcommand{\sbline}{\\[.5\normalbaselineskip]}% small blank line 
+
+\title{\LARGE \bf
+Centrifuge: Protocol for private by design transactions on a decentralized network
+}
+\date{\today}
+
+\author{Centrifuge Contributors\thanks{Repository, {\tt\small http://github.com/centrifuge/protocol}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\acsetup{first-style=short}
+
+%---------------------------------------------------
+%----- Included Files
+%---------------------------------------------------
+% Only files listed here will be included in the PDF document!
+% In order to only partially translate the document, for example for bug-fixing, 
+% it might be useful to comment out some of the documents.
+\includeonly{
+1_abstract,
+2_introduction,
+3_high_level,
+4_document_state,
+5_participants,
+6_wire_protocol,
+7_nft,
+8_versions,
+appendix,
+}
+
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
+
+%---------------------------------------------------
+%----- Content
+%---------------------------------------------------
+\input{abstract}
+\input{1_introduction}
+\input{2_high_level}
+\input{3a_document_fields}
+\input{3b_version_history}
+\input{3c_root_hashes}
+\input{3d_state_commit}
+\input{3e_protobufsproofs}
+\input{4_participants}
+\input{5_consensus}
+\input{6_transitions}
+\input{7_wire_protocol}
+\input{8_nft}
+\input{9_versions}
+
+
+%---------------------------------------------------
+%----- Bibliography
+%---------------------------------------------------
+\phantomsection
+\addcontentsline{toc}{chapter}{Literature}
+\bibliographystyle{plain}
+\bibliography{references.bib}
+
+
+
+%\printacronyms[include-classes=nomencl,name=Nomenclature]
+%\printacronyms[include-classes=abbrev,name=Abbreviations]
+\input{appendix}
+
+\end{document}
+

@@ -1,0 +1,90 @@
+\section{Participants}\label{sec:particpiants}
+A user of Centrifuge is defined as an entity that owns a set of keypairs and is running a node to communicate with other nodes and the smart contracts. A user can be an individual or a different entity. Digital signatures are used to authenticate a user. A user controls a smart contract on Ethereum where they publish the public keys in use.
+
+\subsection{Self-Sovereign Identity}\label{sec:identity_contract}
+A W3C standard for self-sovereign identities called DID (Decentralized Identifiers)\cite{Decentra50:online} is currently under development. Centrifuge identities are compatible with the ERC725 standard (see below \ref{sec:erc725}) for identities which is self-sovereign (SSI), as well as DID compatible.
+
+%TODO: maybe mention Meta transaction which are currently not included in the standard
+\subsubsection{ERC725 Identity Standard}\label{sec:erc725}
+Many decentralized applications built on Ethereum require a form of identity to standardize interactions. A set of different standards for identities have been proposed to address these standardization issues\cite{EIPseip791:online}\cite{ERCLight27:online}. In ERC725\footnote{A newer version of ERC734 dated February 2019 defines key management, while the newer ERC725 v2 defines only the proxy functionality. The Centrifuge protocol currently implements ERC725 v1.}, a user's identity is represented as a smart contract. The user is the owner of the identity, and retains exclusive control over who is allowed to add new keys and interact with other contracts in Ethereum on behalf of the identity.
+\subsubsection{DID - Centrifuge ID}\label{did}
+The address of the identity contract represents the unique ID of a user in the protocol. The ID can be extended with information about the Ethereum network to represent a valid DID. A sample DID representation of an identity address\cite{rwot6san30:online}:
+\begin{quote}\texttt{did:erc725:mainnet:2F2B37C890824242Cb9B0FE5614fA2221B79901E}\end{quote}
+Within Centrifuge, only the address of the identity contract is used to describe a user ID as the only supported identities are Ethereum smart contracts.
+\begin{equation}
+        \mathtt{DID} \in \mathbb{B}_{20}
+\end{equation}
+\subsubsection{Key Management}
+A user can add different public keys to their identity. A number of different signature and encryption standards are supported. A key can be seen as a 4-tuple.
+\begin{equation}
+K = (K_\mathtt{public},K_\mathtt{private},K_\mathtt{type},K_\mathtt{purpose})\\
+\end{equation}
+An ERC725 key is a 3-tuple of three elements, not including the private key of the user. A user can use the same key for multiple purposes and needs only to add it once to the identity contract.
+\begin{eqnarray}
+K_\mathtt{ERC725} & = & (K_\mathtt{public},K_\mathtt{type},K_\mathtt{purposes})\\
+K_\mathtt{public} & \in & \mathbb{B}_{32} \\
+K_\mathtt{type} & \in & \mathbb{B}_{32} \\
+ K_\mathtt{purposes} &\in & \mathbb{B}_{32}^n \\
+  |K_\mathtt{purposes}| & >  & 0
+\end{eqnarray}
+The $K_\texttt{ERC725}$ key is the representation of a $K$ in the identity contract. 
+%TODO Manuel: at least one purpose is required
+\subsubsection{Identity}
+Users have an unique id $I_\mathtt{DID}$ which is the address of their identity contract. A user needs at least 4 different keys for purposes needed in the protocol.It is possible to add other keys to the identity contract or to add keys with same purpose. 
+
+We can formally define the identity of a user as:
+\begin{eqnarray}
+    I& = &(\mathtt{DID},k_\mathtt{man},k_\mathtt{p2p},k_\mathtt{sign},k_\mathtt{action}) \\
+    k & \in & K
+\end{eqnarray}
+
+
+\subsubsection{Proxy Contract}
+A contract in Ethereum does not differentiate between calls from a user account or another contract. A proxy contract is a contract that can forward a call to another contract. From the perspective of the called contract, the \texttt{msg.sender} is the proxy contract. Identities act as a proxy contract. This allows an identity contract to interact with other contracts like any other account. The identity owner can add Ethereum addresses with the purpose \texttt{ACTION-KEY} to their identity that are able to invoke such proxy calls. 
+
+\begin{figure}[thpb]
+  \centering
+  \includegraphics[width=10cm]{img/address.png}
+  \caption{Storage of an Ethereum address in the identity contract.} 
+  \label{fig:address}
+\end{figure}
+
+These Ethereum addresses are allowed to use the proxy functionality of the contract. Later, the owner can revoke the permissions if needed. An Ethereum address has 20 bytes $\mathbb{B}_{20}$. The $K_\texttt{public}$ requires the public key to be 32 bytes. An Ethereum address needs to be converted into a 32 bytes array by adding 12 leading zeros to it. (See Figure \ref{fig:address})
+
+\subsubsection{Key Types}\label{sec:key_types}
+In the protocol, four different key types are required. (See \ref{tab:keys}) The identity contract defines a set of methods for adding and revoking keys.  Every public key must be added to the identity contract.
+\begin{table}[!htbp]
+\label{tab:keys}%TODO: proper reference above
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+ \textbf{Purpose}       & \textbf{Purpose ID} & \textbf{Key Type} \\ \hline
+Management Key &      1      &          secp256k1 \\ \hline
+Action Key    &      2      &            secp256k1     \\ \hline
+Centrifuge Signing Key   &       \texttt{SIGNING} = $\mathtt{sha256}$(\texttt{"CENTRIFUGE@SIGNING"})     &            secp256k1    \\ \hline
+Centrifuge P2P Discovery &    \texttt{P2P\_DISCOVERY} = $\mathtt{sha256}$(\texttt{"CENTRIFUGE@P2P\_DISCOVERY"})         &            ED25519 \\ \hline
+\end{tabular}
+\caption{Overview of the key types used in the Centrifuge protocol.}
+\end{table}
+% TODO: proper quotation marks in above table
+
+\subsubsection{Management Key}
+The management key, $k_\mathtt{man}$, is a reserved key type in the ERC725 standard and represents the key pair of the owner. This key has the right to add new keys, revoke existing ones, or allow other addresses to use the proxy functionality.
+\subsubsection{Action Key} 
+The action key, $k_\mathtt{action}$, is a reserved key type in the ERC725 standard. An action key can be added by a management key and allows the owner of the action key to use the proxy functionality.  Only an Ethereum address stored as a key with the action purpose can trigger the proxy functionality. \\
+\subsubsection{Centrifuge Signing Key}
+The signing key, $k_\mathtt{sign}$, is a Centrifuge specific key purpose. It is used to sign documents together with other collaborators. The key type needs to be secp256k1 because a signature can be part of a merkle proof and needs to be verified on-chain to guarantee another identity has signed a document. The identity contract has a method which verifies signatures based on a purpose. Secp256k1 signature verification has native support in the EVM.
+\subsubsection{Centrifuge P2P Discovery Key}
+See section \ref{did-node}.
+\subsubsection{Deployment of an Identity}
+An identity contract is deployed by a user through a well-known, Centrifuge-specific Factory contract, the  \texttt{IdentityFactory} contract, that constructs the identity for the caller and keeps track of identities which are created within the Centrifuge network. This tracking allows for later verification of identity "validity" for users within the network.
+%TODO Manuel
+\subsubsection{Revoking Keys}
+The ERC725 identity standards allows for key revocation. A revoked key is not removed from the identity contract. It is only marked as revoked. In the protocol, a message which is signed with a revoked key before the key was revoked is accepted. However, a message which is signed with a revoked key after the key was revoked is not accepted.
+%TODO add graphic for better understanding
+
+
+
+
+
+

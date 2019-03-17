@@ -1,0 +1,64 @@
+\section{Validators}
+A collaborator should only sign a state update, as described in \ref{sec:reach_consensus}, if it is considered to be valid. In the following paragraphs, we describe both the protocol-level validation rules as well as document-specific rules.
+
+\subsection{Protobuf Validation}
+A document consists of two parts. The schema fields (Sec. \ref{sec:doc_schema_fields}) depend on the document type (e.g. \textit{Purchase Order}, \textit{Invoice}). The core document fields (Sec. \ref{sec:doc_core_doc_fields}) are part of every document. Protobuf's schema definitions provides significant built-in validation by enforcing types and fields. When exchanging the document via P2P messages, they are marshalled into the protobuf byte format and thus type-enforced. We will skip over these validation rules and assume that a user would always reject a document that is an invalid protobuf message.
+
+\subsection{Schema Validation}
+A validator defines a set of transition rules for a document field or a set of document fields. For example, it would be not allowed to change the order quantity field of a purchase order to a negative value. Formally, a validator $V$ is a function which has as an input the current document $d$ and the next document $d'$.
+
+\begin{eqnarray}
+v & = & \mathsf{V}(d, d') \\
+ v &\in & \{0,1\}
+\end{eqnarray}
+The output of a validator function $V$ is either $1$ for accepted or $0$ for denied. If the field transitions are described in the validator $V$ the validator returns $1$.
+The validator $V$ must also define case $d = \emptyset$ for a given first version of a document.
+
+Every document of a specific schema $\Upsilon$  has a set of different document validators for describing a document schema like invoice or purchaseorder.
+\begin{equation}
+     \Upsilon = (V_0,...,V_n) 
+\end{equation}
+We define a $\mathsf{validateSchema}$ which evaluates all Validators $V$ of a schema $\Upsilon$
+
+\begin{equation}
+\begin{split}
+   \mathsf{validateSchema}(d_S,d'_S,\Upsilon) =\prod_{i=0}^{n} V_i(d, d')  \qquad \forall V \in \Upsilon
+    \end{split}
+\end{equation}
+All validators need to accept the proposed document $d'$. Otherwise, the function will return $0$ for denied.
+\begin{equation}
+  \mathsf{validateSchema}(d_S,d'_S,\Upsilon) = 1
+\end{equation}
+ In the special case of the first document $d_{[0]}$, schema validation must occur.
+\begin{equation}
+  \mathsf{validateSchema}(\emptyset, d'_S,\Upsilon) = 1 \quad \text{for} \quad  d' = d_{[0]}
+\end{equation}
+
+\subsection{Validate Rules}
+A document has specific rules which define the read and write permissions field by field. A rule defines a set of roles which are allowed to write, read or should sign a document. (See Section:  \ref{sec:roles_rules}) A proposed new document $d'$ is not allowed to violate the rules. Therefore for each changed field in the document $d'$ the the rules need be evaluated.
+
+\begin{equation}
+ \begin{split}
+  r = \mathsf{validateRules}(d,d',d'_{\mathtt{author}},d'_{\mathtt{rules}}) \\
+  r \in \{1;0\}
+ \end{split}
+\end{equation}
+
+The rules together with specific field are also used to implement document acceptance on the business layer. Let's say a invoice document has two defined roles, one for the supplier and one for the buyer. The invoice could have a specific field \textit{buyer-accepts-invoice} together with a specific rule which allows only members of the role buyer to modify it. In case the supplier wants to set the field to true the buyer would reject the signature. 
+
+\subsection{Validate Function}
+A user only signs the signing root of a document  only if all validators in the schema are accepted and if no document rule is violated.
+\begin{equation}
+ \mathsf{validate}(d,d') =\mathsf{validateSchema}(d,d',\Upsilon) * \mathsf{validateRules}(d,d',d'_{\mathtt{author}},d'_{\mathtt{rules}}) \\
+ \end{equation}
+    \begin{equation}
+ \mathsf{validate}(d,d') = 1
+ \end{equation}
+
+\subsubsection{Validation}
+If the user has both the previous and the current version of the document, it will sign off on the state update. A document signature of a collaborator on both $d$ and $d\prime$ means the collaborator validated both the format of $d$ and $d\prime$. It also indicates that the user has validated that no validation rules were violated transitioning from $d$ to $d\prime$.
+
+
+ 
+ 
+ 
