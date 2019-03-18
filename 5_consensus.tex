@@ -2,7 +2,7 @@
 \label{sec:consensus}
 In \ref{sec:doc_state_comm}, we introduced how state is committed to and in \ref{sec:particpiants}, we defined the attributes and behaviors of individual actors in the system. Building upon this, we now introduce our mechanism for enabling the reaching of consensus among different parties.
 \subsection{Consensus Trade-offs}
-For reasons of simplicity for the initial protocol version, we have decided to avoid a fully BFT consensus scheme. The protocol does not guarantee data availability for every participant. Instead, the focus is on preserving privacy in the optimistic case and requiring any consensus failures to be settled out of band. 
+For the initial protocol version we have decided to avoid a fully BFT consensus scheme. The protocol does not guarantee data availability for every participant. Instead, the focus is on preserving privacy in the optimistic case and requiring any consensus failures to be settled out of band. 
 
 \subsection{Roles and Rules}\label{sec:roles_rules}
 A document has a set of roles, $d_{\mathtt{roles}}$ and rules, $d_{\mathtt{rules}}$ that can be attached to a role. Nodes have particular roles, and the rules give them certain capabilities. They are listed in the set of $Role_{\mathtt{members}}$.
@@ -61,10 +61,10 @@ d_{\mathtt{collaborators}} &  = & \mathsf{getAllMembersWithAction}( d_\mathtt{ru
     %d_{\mathtt{readers}} & \equiv & \{ Role_{\mathtt{members}} : Role \in Rule_{\mathtt{roles}} \}\quad\text{for}\quad Rule \in Rules_{read}
 %\end{eqnarray}
 
-\subsection{Reaching Consensus on the Document state}\label{sec:reach_consensus}
-When a collaborator wants to update the state and commit to a new version, the document changes are first sent to all collaborators on a document in order to collect signatures of the signing root, $R_{signing}$.
+\subsection{Reaching consensus on the document state}\label{sec:reach_consensus}
+When a collaborator wants to update the state and commit to a new version, the document changes are first sent to all collaborators on a document in order to collect the signatures by the collaborators. The collaborators sign the signing root, $R_{signing}$.
 
-Note that the full flow of pre-commit and commit is described in the following section. The protocol can function without a pre-commit being executed, assuming that there are no malicious document collaborators. For completeness' sake, the pre-commit is included in the flow below.
+In the following section, the pre-commit and commit is described. A user does not need to use a pre-commit and can commit a document state immediately. However this has drawbacks if there are byzantine nodes.
 
 \subsubsection{Consensus Protocol}
 Each collaborator is found in the P2P network and the new state is transmitted with a request to provide a signature. We define the user who initiates the state update as $\iota$ and collaborators $c_n$.
@@ -166,7 +166,7 @@ After the user published the commit every collaborator should receive the final 
    \mathsf{validate}(d, d') & = & 1\\
      \mathsf{validateSignatures}(d'_{\mathtt{collaborators}},R_{\mathtt{signing-root}},d'_{\mathtt{signatures}}) & = & 1
 \end{eqnarray}
-A collaborator can verify the received document $d'$ if actually an anchor has been committed and which other collaborators signed the document. Together with a checck
+A collaborator can verify the received document $d'$ if actually an anchor has been committed and which other collaborators signed the document.
 
 \subsubsection{Consensus failure}
 Should one of the collaborators be unavailable or refuse to sign the proposed document update, the node will submit the new update on-chain without the signature of the offline node. There is no guarantee in the protocol that a node will collaborate at this point in time. If a signature is missing, it can mean one of following:

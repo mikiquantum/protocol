@@ -8,19 +8,13 @@ A document has a predefined schema to represent a specific document type, like a
 calculated merkle root of a document is committed on chain. A new version is only accepted by others if the document root hash exists in the \textit{AnchorRepository} and the set of mandatory document fields in the new version satisfy protocol-specific requirements.  A formal definition of the individual document components should expound the requirements of a valid new document state. 
 \newline
 \subsection{Conventions}
-TODO
-%\item TODO arrow notation
-%\item TODO lower case in variables
-%\item TODO user,identity,DID,node
-
-Elements of $\mathbb{B}$ are an arbitrary-length byte array. $\mathbb{B}_{32}$ describes the set of 32 byte arrays. 
 \textcolor{gray}{TODO:explain the used notation}.
 \subsection{Document}
 %---------------------------------------------------
 %----- Fields
 %---------------------------------------------------
 \subsubsection{Fields}
-\textcolor{gray}{we need to define that the schema version is defined in the coredoc}
+%TODO we need to define that the schema version is defined in the coredoc
 The smallest unit of a document is called \textit{field}.  
 A field $F$ is a 3-tuple  with a field name defined as $F_\texttt{name}$, a field value defined as $F_\texttt{value}$ and a salt defined as $F_\texttt{salt}$
 \begin{eqnarray}
@@ -29,11 +23,11 @@ F = (F_\texttt{name},F_\texttt{value},F_\texttt{salt}) \\
 F_{\texttt{name}} \in \mathbb{B} \wedge F_{\texttt{value}} \in \mathbb{B} \wedge  F_{\texttt{salt}} \in \mathbb{B}_{32} \\
 \end{array}
 \end{eqnarray}
-
+Elements of $\mathbb{B}$ are an arbitrary-length byte array. $\mathbb{B}_{32}$ describes the set of fixed 32 byte array. 
 
 \subsubsection{Document}
 A document $d$  can be formally expressed as the union of the schema field set $S$ with a set of core fields called core document denoted as $C$.
-\textcolor{gray}{TODO: add reference to centrifuge-protobufs}
+%TODO: add reference to centrifuge-protobufs
 
 \begin{equation}
 d \equiv S \cup  C

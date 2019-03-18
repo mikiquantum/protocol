@@ -26,7 +26,7 @@ The mint method requires a set of proofs $(P_{[0]},...,P_{[n]})$ to perform the 
 \begin{equation}
 \begin{split}
 P = (P_{\mathtt{field}},P_{\mathtt{sibling-hashes}}) \qquad
-P_{\mathtt{field}} \in F \quad \And \quad P_{\mathtt{sibling-hashes}} \in \mathbb{B}_{32}^n 
+P_{\mathtt{field}} \in F \quad \land \quad P_{\mathtt{sibling-hashes}} \in \mathbb{B}_{32}^n 
 \end{split}
 \end{equation}
 
@@ -34,8 +34,8 @@ P_{\mathtt{field}} \in F \quad \And \quad P_{\mathtt{sibling-hashes}} \in \mathb
 The mint method needs the anchor for $d_{\mathtt{current}}$ to perform the merkle proofs based on the document root.
 \begin{equation}
 \begin{split}
-{\scriptscriptstyle \mathsf{NFTRegistry}}  {\scriptscriptstyle &\xleftarrow[]{\text{ETH}}}  {\scriptscriptstyle \mathsf{AnchorRepository}} \\
-{A_{\texttt{anchor-current}} &\xleftarrow[]{\text{ETH}} \textsf{getCommit}(d_{\mathtt{current}})}
+\mathsf{NFTRegistry}   &\ethleftarrow  \mathsf{AnchorRepository} \\
+{A_{\texttt{anchor-current}} &\ethleftarrow \textsf{getCommit}(d_{\mathtt{current}})}
 \end{split}
 \end{equation}
 \textsf{NFTRegistry} calls the \textsf{AnchorRepository} to receive the document root (anchor) of the document. 
@@ -93,7 +93,7 @@ v & = 1 \\
 \end{equation}
 
 \subsubsection{Verify a Signature}
-Providing a signature of a collaborator as part of a NFT minting ensures that the collaborator agreed on the document state. Agreement means a document rule $d_rules$ or a schema validation was not violated. For verifying a signature of the document signing root $R_\mathtt{signing}$ five steps are required.
+Providing a signature of a collaborator as part of a NFT minting ensures that the collaborator agreed on the document state. Agreement means a document rule $d_{rules}$ or a schema validation was not violated. For verifying a signature of the document signing root $R_\mathtt{signing}$ five steps are required.\\\\
 \textbf{Signature part of document} \\
 First a merkle proof verifies that a provided signature is part of the document.
 \begin{equation}
@@ -109,7 +109,7 @@ In a second merkle proof the DID of the collaborator who signed the document nee
 \end{split}
 \end{equation}
 \textbf{Signing root part of the document} \\
-A third merkle proof verifies that the siging root $R_\mathtt{signing}$ is part of the document.
+A third merkle proof verifies that the signing root $R_\mathtt{signing}$ is part of the document.
 \begin{equation}
 \begin{split}
 \mathcal{M}_{\texttt{proof}}(A_{\texttt{anchor-current}} ,P_{[\mathtt{signing-root}]\mathtt{field}},P_{[\mathtt{signing-root}]\mathtt{sibling-hashes}}) = 1 \\
@@ -124,6 +124,7 @@ v &\xleftarrow[]{\text{ETH}} \textsf{createdIdentity}(\mathtt{msg.sender}) \\
 v & = 1
 \end{split}
 \end{equation}
+In case of the signature of the \texttt{msg.sender} the identity has been verified as part of the identity verification.\\\\
 \textbf{Verify the signature of the Collaborator} \\
 If the DID of the collaborator is a ERC725 identity contract. The NFTRegistry can call the signature verification method on it.
 \begin{equation}
@@ -135,6 +136,7 @@ v & = 1
 \end{split}
 \end{equation}
 \\
+%\textcolor{gray}{TODO:equation 115 is outdated.Add revoke check and Recover}.\\
 If the signature was signed with the purpose key for signing the signature is accepted by the mint method.
 
 \subsubsection{Uniqueness Enforcement}
@@ -165,7 +167,8 @@ P_{[\mathtt{nfts]{[registry-address]}}\mathtt{field.value}} &= T_{\mathtt{id}}
 \end{split}
 \end{equation}
 Inside the mint method a merkle proofs verifies that the provided $T_{id}$ is part of the document. A collaborator would not sign a new document version $d'$ if the current one already includes a token id for the same NFT registry. Without the signatures of the collaborators it is not possible to mint a token for the same registry twice.
-
+\subsubsection{Rule,Role and Read Action Proof}
+% \textcolor{gray}{TODO:explain read Rule}.
 
 \subsection{Token Methods}
 The ERC721 standard defines the interface for a NFT registry.
@@ -181,8 +184,7 @@ A token can be transferred by the current owner to a different owner:
 \mathsf{transferTo}(T_{\texttt{id}},T_{\texttt{owner}},T_{\texttt{new-owner}}) \xrightarrow[]{\text{ETH}}  \mathsf{NFTRegistry}
 \end{equation}
 \subsubsection{Metadata}
-Metadata 
- 
+\textcolor{gray}{TODO:explain metadata field}.
 
 \subsection{Document Access}
 Over the life time of an NFT it can be transfered to different users and companies. A person or a user who owns an NFT has the option to request read access to the document which belongs to the NFT. The token owner needs to have a node and a DID. It is not required that the owner is in the list of document collaborators $d_{\mathtt{collaborators}}$.

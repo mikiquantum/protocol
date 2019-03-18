@@ -54,6 +54,7 @@ The anchor registry's \texttt{commit} method does not have any restrictions, exc
     \mathsf{commit}(d_{[i-1]\texttt{next-img}},R_{\texttt{doc-root}},P_{\texttt{sign-proof}}) \xrightarrow[]{\text{ETH}} \mathsf{AnchorRepository}
     %M_{\texttt{proof}}(R_{\texttt{doc-root}})
 \end{equation}\\
+\textcolor{gray}{TODO:In the latest implementation we store the next-img in the current document.  It is not needed anymore to access the previous document version to get the d\_next-img. The document d has d\_next-img and d\_current-img}.\\\\
 \textbf{Next Pre-Image }\\
 The commit method hashes $d_{[i−1]\texttt{next-img}}$ inside the smart contract to get the $A_{\texttt{anchor-id}}$. The $d_{[i−1]\texttt{next-img}}$ of the previous version is needed to commit the next version. It is not possible to use $d_{[i−1]\texttt{next}}$ (equal to $d_{[i]\texttt{current}}$) directly. In some cases, the field  $d_{\texttt{next}}$ is revealed to the outside world to proof the latest version of a document.(See NFT \ref{sec:nft}) An attacker could commit an malicious anchor for $d_{\texttt{next}}$ without the usage of $d_{\texttt{next-img}}$. The field $d_{\texttt{next-img}}$ is never revealed to the outside world. \\
 \\
