@@ -60,29 +60,15 @@ A tree of the  $R_{\texttt{doc-root}}$ calculation. (see Fig. \ref{fig:root-hash
     draw, align=center, %top color=white, bottom color=gray!20
     }]]
   \node {$R_{{\texttt{document}}}$}
-    child { node {$R_{{\texttt{signing}}}$}  child { node {$R_{{\texttt{schema}}}$}
+    child { node {$R_{{\texttt{signing}}}$}  child { node {$R_{{\texttt{schema}}}$}  
     } child { node {$R_{{\texttt{core}}}$}
     } }
     child { node {$R_{{\texttt{signatures}}}$}};
 \end{tikzpicture}
-\caption{Calculation of the document root hash} \label{fig:root-hash}
+\caption{Calculation of the last layers of the document merkle tree. The leafs are the roots of merkle trees from the different document parts }\label{fig:root-hash}
 \end{figure}
 We can define a second help function called $\mathsf{calculateDocumentRoot}(d)$ for calculating the entire $R_{\texttt{doc-root}}$. 
 \begin{eqnarray}
 R_{\texttt{doc-root}}& =&\mathsf{calculateDocumentRoot}(d) \\
 \mathsf{calculateDocumentRoot}(d)& = & \texttt{sha256}( \mathsf{R_{\texttt{signing}}}\| \mathcal{M}_{\texttt{tree}}(d_S))
 \end{eqnarray}
-The functions $\mathsf{calculateDocumentRoot}(d)$ and $\mathsf{calculateSigingRoot}(d)$ are needed for the document consensus chapter.
-%\begin{eqnarray}
-%R_{\mathsf{CD}} = \mathcal{M}(\mathsf{CD}) \\
-%R_{\mathsf{D}} = \mathcal{M}(\mathsf{D}) \\
-%R_{\mathsf{S}} = \mathrm{sha256}(R_{\mathsf{CD}} + R_{\mathsf{D}}) \\
-%$R = \mathcal{M}(R_{\mathsf{S}}, \mathbb{S}) \\
-%\end{eqnarray}
-% TODO: what is the correct operation for binary append?
-
-% formula list
-%sig_root = T(T(\textt{CoreDocument}), T(\textt{DocumentData}))
-%Sig_alice = s(sig_root, private key alice)
-%S = {s(sig_root, pk_alice), s(sig_root, pk_bob), ...} 
-% document_root = T({sig_root, S})

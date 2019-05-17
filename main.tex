@@ -101,7 +101,7 @@ captionpos=b
 	pdftitle={Centrifuge:  Protocol for private by design transactions on a decentralized network}, 
     pdfauthor={Lucas Vogelsang,Manuel Polzhofer, Philip Stehlik}, 
     pdfsubject={Protocol Paper, Centrifuge}, % please, select the type of this document
-    pdfstartview={FitH},    % fits the width of the page to the window
+    pdfstartview={FitH},    % fits the width of the page to the windowhttps://www.overleaf.com/project/5c35d0fa8c97d86e2adb91c2
     pdfnewwindow=true, 		% links in new window
     colorlinks=true,  		% false: boxed links; true: colored links
     linkcolor=orange,          % color of internal links
@@ -124,6 +124,12 @@ captionpos=b
 
 
 %---------------------------------------------------
+%----- Version
+%---------------------------------------------------
+\def\ProtocolPaperVersionNumber{unknown revision}
+\IfFileExists{Options.tex}{\input{Options.tex}}
+
+%---------------------------------------------------
 %----- Helper Commands
 %---------------------------------------------------
 \newcommand{\codesection}[1]{\doublespacing{\hspace{\parindent}\texttt{#1}}}
@@ -134,30 +140,12 @@ captionpos=b
 \title{\LARGE \bf
 Centrifuge: Protocol for private by design transactions on a decentralized network
 }
-\date{WORKING DRAFT\\\today}
-\author{Centrifuge Contributors\thanks{Repository, {\tt\small http://github.com/centrifuge/protocol}}}
+\date{\ProtocolPaperVersionNumber}
+\author{Lucas Vogelsang\thanks{Lucas Vogelsang, {\tt\small l@lucasvo.com}} \hspace{0.1cm} Manuel Polzhofer\thanks{Manuel Polzhofer, {\tt\small manuel@centrifuge.io}}  \hspace{0.1cm} Philip Stehlik\thanks{Philip Stehlik, {\tt\small philip@centrifuge.io}} \hspace{0.1cm} Vimukthi Wickramasinghe\thanks{Vimukthi Wickramasinghe, {\tt\small vimukthi@centrifuge.io}}}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \acsetup{first-style=short}
-
-%---------------------------------------------------
-%----- Included Files
-%---------------------------------------------------
-% Only files listed here will be included in the PDF document!
-% In order to only partially translate the document, for example for bug-fixing, 
-% it might be useful to comment out some of the documents.
-\includeonly{
-1_abstract,
-2_introduction,
-3_high_level,
-4_document_state,
-5_participants,
-6_wire_protocol,
-7_nft,
-8_versions,
-appendix,
-}
-
 
 \begin{document}
 

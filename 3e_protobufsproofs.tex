@@ -1,4 +1,4 @@
-\subsection{Protobuf for Schema Definitions}
+\subsection{Protobuf for Schema Definitions}\label{sec:protobuf_schema}
 %TODO (Lucas): finish precise proofs 
 Every document has a predefined schema which is agreed upon by all network participants. The Protobuf\footnote{\url{https://developers.google.com/protocol-buffers/}} message format is used for defining the document schema. It was chosen as a schema and serialization standard for its efficient binary format, broad support in different programming languages and fixed schema. An example of such a message is shown below in Fig. \ref{fig:example_document}. 
 
@@ -18,7 +18,6 @@ All documents that are supported by Centrifuge protocol are hosted on GitHub in 
 
 
 \subsection{Precise proofs: Merkle tree format}\label{sec:precise_proofs}
-%TODO (Lucas): finish precise proofs 
 Merkle trees are efficient ways to prove membership in a set. By encoding the leaves of the tree, a Merkle tree can be used to make a proof about the value of a field specific in the schema. The value of the field is prefixed with a byte encoded field path, $P$, and a salt, $S$. 
 
 
@@ -49,5 +48,12 @@ For each leaf, $\lambda$, the name $P$, the salt $S$ and the value $v$ are appen
 \mathrm{T}(\mathrm{D}) = \mathcal{M}({\lambda_{1} \parallel \lambda_{2} \parallel ... \parallel \lambda_{n}})
 \end{eqnarray}
 
-%\subsection{Merkle Proof}
-%TODO (Manuel): verify a field
+\subsubsection{Merkle Proof Validation}\label{sec:merkle_proof_validation}
+A Merkle proof can be seen as a function which proves if a provided field $P_\mathtt{field}$ is part of document. By calling the NFT mint method the value of these fields is revealed to the public. 
+\begin{equation}
+\begin{split}
+v = \mathcal{M}_{\texttt{proof}}(A_{\texttt{anchor-current}},P_\mathtt{field},P_\mathtt{sibling-hashes}) \\
+v \in \{0;1\}
+\end{split}
+\end{equation}
+The $P_\mathtt{field}$  could be any field of the core document $d_C$ or the schema field $d_S$. The required $P_\mathtt{sibling-hashes}$ can be generated with the precise proofs library inside the node and contains the siblings of the field in each layer of the Merkle tree.  

@@ -1,6 +1,6 @@
 \section{User Mintable Non-Fungible Tokens}
 \label{sec:nft}
-To allow for the integration of Centrifuge documents into other applications built on Ethereum, Centrifuge implements a smart contract library for minting non-fungible tokens (NFTs as specificed by ERC721). NFTs are a widely adopted standard to create objects that have trackable and unique ownership. Centrifuge extends this standard with methods that allow users to mint these NFTs based on the private off-chain data in a document. When invoking the mint method on an $\mathsf{NFTRegistry}$, a set of fields of the document have to be revealed as merkle proofs, using the precise-proofs library. This information can then be stored in the token registry. We call this data metadata. Semantically, an NFT can have any kind of meaning for the application using it. The protocol itself does not impose any meaning to the tokens but merely provides a verifiable way to mint tokens for specific document states. The contract library provides the helpers to ensure that for one document only one token is minted in an NFT registry, that certain access rights are granted, and that the document is of a valid structure. Centrifuge, however, does define and deploy a number of registries that have a semantic meaning, most notably the Payment Obligation NFT. %TODO Reference 
+To allow for the integration of Centrifuge documents into other applications built on Ethereum, Centrifuge implements a smart contract library for minting non-fungible tokens (NFTs as specificed by ERC721). NFTs are a widely adopted standard to create objects that have trackable and unique ownership. Centrifuge extends this standard with methods that allow users to mint these NFTs based on the private off-chain data in a document. When invoking the mint method on an $\mathsf{NFTRegistry}$, a set of fields of the document have to be revealed as Merkle proofs, using the precise-proofs library. This information can then be stored in the token registry. We call this data meta data. Semantically, an NFT can have any kind of meaning for the application using it. The Centrifuge protocol has some common NFT registries but also allows for deploying of custom registries. The contract library\footnote{\url{https://github.com/centrifuge/centrifuge-ethereum-contracts/blob/develop/contracts/erc721/UserMintableERC721.sol}} provides the helpers to ensure that for one document only one token is minted in an NFT registry, that certain access rights are granted, and that the document is of a valid structure. 
 
 \subsection{Non-Fungible Token Contract}
 An NFT is a unique token that is always owned by one entity (an Ethereum account or contract). A token registry contract is a smart contract that manages a set of tokens.
@@ -22,7 +22,7 @@ NFTs are created by calling the \texttt{mint} method of an NFT contract. The \te
     %M_{\texttt{proof}}(R_{\texttt{doc-root}})
 \end{equation}\\
 A node doesn't call the mint method of the NFT Registry directly. The proxy functionality of the identity contract is used together with an action key $k_\mathtt{action}$ \textsf{mint} stored inside the node.\\\\
-The mint method requires a set of proofs $(P_{[0]},...,P_{[n]})$ to perform the merkle proofs.
+The mint method requires a set of proofs $(P_{[0]},...,P_{[n]})$ to perform the Merkle proofs.
 \begin{equation}
 \begin{split}
 P = (P_{\mathtt{field}},P_{\mathtt{sibling-hashes}}) \qquad
@@ -31,24 +31,16 @@ P_{\mathtt{field}} \in F \quad \land \quad P_{\mathtt{sibling-hashes}} \in \math
 \end{equation}
 
 \subsubsection{Getting the Anchors}
-The mint method needs the anchor for $d_{\mathtt{current}}$ to perform the merkle proofs based on the document root.
+The mint method needs the anchor for $d_{\mathtt{current}}$ to perform the Merkle proofs based on the document root.
 \begin{equation}
 \begin{split}
 \mathsf{NFTRegistry}   &\ethleftarrow  \mathsf{AnchorRepository} \\
-{A_{\texttt{anchor-current}} &\ethleftarrow \textsf{getCommit}(d_{\mathtt{current}})}
+A_{\texttt{anchor-current}} &\ethleftarrow \textsf{getCommit}(d_{\mathtt{current}})
 \end{split}
 \end{equation}
 \textsf{NFTRegistry} calls the \textsf{AnchorRepository} to receive the document root (anchor) of the document. 
 
-\subsubsection{Merkle Proof}
-A Merkle proof can be seen as a function which proves if a provided field $P_\mathtt{field}$ is part of document. By calling the NFT mint method the value of these fields is revealed to the public. 
-\begin{equation}
-\begin{split}
-v = \mathcal{M}_{\texttt{proof}}(A_{\texttt{anchor-current}},P_\mathtt{field},P_\mathtt{sibling-hashes}) \\
-v \in \{0;1\}
-\end{split}
-\end{equation}
-The $P_\mathtt{field}$  could be any field of the core document $d_C$ or the schema field $d_S$. The required $P_\mathtt{sibling-hashes}$ can be generated with the precise proofs library inside the node and contains the siblings of the field in each layer of the merkle tree.  
+
 \subsubsection{Individual Field Merkle Proof}
 Every NFT registry defines a set of mandatory fields on the document which need to be revealed. The mandatory fields depend on the purpose of the NFT and are defined by the initialization of the smart contract.
 \begin{equation}
@@ -62,18 +54,18 @@ Every mandatory field requires a proof to verify that it is part of the document
 \end{equation}
 The required values are defined in the contract itself and are formally noted as $T_{\mathtt{constraints}}$. An example could be the status field of an invoice needs to be \textit{unpaid} for a specific NFT registry. It is possible to implement more complex conditions in a registry contract. Like the value of a fields needs to equal one out of $n$ pre defined values. 
 \subsubsection{Latest Document}
-A document can have multiple versions. It should be only possible to mint an NFT out of the latest document version. The $d_{\mathtt{next}}$ defines the anchor id of the next version. The mint method receives $d_{\mathtt{next}}$ as a parameter and can fetch the $A_{\texttt{anchor-next}}$ from the anchor registry.
+It should be only possible to mint an NFT out of the most recent document version. A proof can be supplied to the The $d_{\mathtt{next}}$ defines the anchor id of the next version. The mint method receives $d_{\mathtt{next}}$ as a parameter and can fetch the $A_{\texttt{anchor-next}}$ from the anchor registry.
 \begin{equation}
 \begin{split}
 \mathsf{NFTRegistry} &\xleftarrow[]{\text{ETH}}  \mathsf{AnchorRepository} \\
 A_{\texttt{anchor-next}} &\xleftarrow[]{\text{ETH}} \textsf{getCommit}(d_{\mathtt{next}})
 \end{split}
 \end{equation}
-If $A_{\mathtt{anchor-next}}$ is not existing in the anchor registry and the $d_{\mathtt{next}}$ is part of document root.
+The next anchor should not be set. This is enforced by checking that $d_{\mathtt{next}}$ is part of document root and $A_{\mathtt{anchor-next}}$ should not exist in the anchor registry.
 \begin{equation}
 \begin{split}
-A_{\texttt{anchor-next}}  = \emptyset \quad \land \quad
-\mathcal{M}_{\texttt{proof}}(A_{\texttt{anchor-current}} ,P_{[\mathtt{next}]\mathtt{field}}, &P_{[\mathtt{next}]\mathtt{sibling-hashes}})  = 1
+\mathcal{M}_{\texttt{proof}}(A_{\texttt{anchor-current}} ,P_{[\mathtt{next}]\mathtt{field}}, &P_{[\mathtt{next}]\mathtt{sibling-hashes}})  = 1 \quad \land \quad
+A_{\texttt{anchor-next}} = \emptyset 
 \end{split}
 \end{equation}
 The $A_{\mathtt{anchor-current}}$ is the document root and $d_\mathtt{current}$ is the id of the latest document version.
@@ -82,34 +74,34 @@ A NFT registry should be called by an identity contract. It makes it easier to v
 \begin{equation}
 \mathtt{msg.sender} = I_{\mathtt{DID}}
 \end{equation}
-For the document collaborator who wants to mint the document the Ethereum \texttt{msg.sender} is equal to their $DID$. In a second step the identity factory is called to verify if it an identity contract.
+For the document collaborator who wants to mint the document the Ethereum \texttt{msg.sender} is equal to their $DID$. In a second step the identity factory is called to verify if it is an identity contract.
 \begin{equation}
 \begin{split}
 \mathcal{M}_{\texttt{proof}}(A_{\texttt{anchor-current}} ,P_{[\mathtt{collaborator.did}]\mathtt{field}}, &P_{[\mathtt{collaborator.did}]\mathtt{sibling-hashes}})  = 1 \\
-\mathsf{NFTRegistry} &\xleftarrow[]{\text{ETH}}  \mathsf{IdentityFactory} \\
-v &\xleftarrow[]{\text{ETH}} \textsf{createdIdentity}(\mathtt{P_{[\mathtt{collaborator.did}]}}) \\
+\mathsf{NFTRegistry} &\ethleftarrow  \mathsf{IdentityFactory} \\
+v &\ethleftarrow \textsf{createdIdentity}(\mathtt{P_{[\mathtt{collaborator.did}]}}) \\
 v & = 1 \\
 \end{split}
 \end{equation}
 
 \subsubsection{Verify a Signature}
-Providing a signature of a collaborator as part of a NFT minting ensures that the collaborator agreed on the document state. Agreement means a document rule $d_{rules}$ or a schema validation was not violated. For verifying a signature of the document signing root $R_\mathtt{signing}$ five steps are required.\\\\
-\textbf{Signature part of document} \\
-First a merkle proof verifies that a provided signature is part of the document.
+Providing a signature of a collaborator as part of a NFT minting ensures that the collaborator signed the document state.\\\\
+\textbf{Ensure that the signature part of the document} \\
+First a Merkle proof verifies that a provided signature is part of the document.
 \begin{equation}
 \begin{split}
 \mathcal{M}_{\texttt{proof}}(A_{\texttt{anchor-current}} ,P_{[\mathtt{signature}]\mathtt{field}},P_{[\mathtt{signature}]\mathtt{sibling-hashes}}) = 1 \\
 \end{split}
 \end{equation}
 \textbf{Collaborator part of the document} \\
-In a second merkle proof the DID of the collaborator who signed the document needs to be part of the document collaborators.
+In a second Merkle proof the DID of the collaborator who signed the document needs to be part of the document collaborators.
 \begin{equation}
 \begin{split}
 \mathcal{M}_{\texttt{proof}}(A_{\texttt{anchor-current}} ,P_{[\mathtt{collaborator.did}]\mathtt{field}},P_{[\mathtt{collaborator.did}]\mathtt{sibling-hashes}}) = 1 \\
 \end{split}
 \end{equation}
 \textbf{Signing root part of the document} \\
-A third merkle proof verifies that the signing root $R_\mathtt{signing}$ is part of the document.
+A third Merkle proof verifies that the signing root $R_\mathtt{signing}$ is part of the document.
 \begin{equation}
 \begin{split}
 \mathcal{M}_{\texttt{proof}}(A_{\texttt{anchor-current}} ,P_{[\mathtt{signing-root}]\mathtt{field}},P_{[\mathtt{signing-root}]\mathtt{sibling-hashes}}) = 1 \\
@@ -119,28 +111,27 @@ A third merkle proof verifies that the signing root $R_\mathtt{signing}$ is part
 The DID of the collaborator needs to be an ERC725 identity contract created by the Identity factory.
 \begin{equation}
 \begin{split}
-\mathsf{NFTRegistry} &\xleftarrow[]{\text{ETH}}  \mathsf{IdentityFactory} \\
-v &\xleftarrow[]{\text{ETH}} \textsf{createdIdentity}(\mathtt{msg.sender}) \\
+\mathsf{NFTRegistry} &\ethleftarrow  \mathsf{IdentityFactory} \\
+v &\ethleftarrow \textsf{createdIdentity}(\mathtt{msg.sender}) \\
 v & = 1
 \end{split}
 \end{equation}
-In case of the signature of the \texttt{msg.sender} the identity has been verified as part of the identity verification.\\\\
 \textbf{Verify the signature of the Collaborator} \\
-If the DID of the collaborator is a ERC725 identity contract. The NFTRegistry can call the signature verification method on it.
+The NFTRegistry can recover the used address from the signature and the signed message. Afterwards the identity contract of the \texttt{msg.sender} is called to verify if the recovered address exists as a key and is not revoked.
 \begin{equation}
 \begin{split}
-\mathsf{NFTRegistry} &\xleftarrow[]{\text{ETH}}  \mathsf{Identity} \\
-K_{\texttt{purpose}} & = \mathtt{sha256("CENTRIFUGE@SIGNING"))} \\
-v &\xleftarrow[]{\text{ETH}} \textsf{isSignedWithPurpose}(P_{[\mathtt{signing-root}]\mathtt{field}},P_{[\mathtt{signature}]\mathtt{field}},K_{\texttt{purpose}}))\\
-v & = 1
+k & = \mathtt{recover}(P_{[\mathtt{signing-root}]\mathtt{field}}, P_{[\mathtt{signature}]\mathtt{field.value}}) \\
+\mathsf{NFTRegistry} &\ethleftarrow  \mathsf{Identity} \\
+v &\ethleftarrow \textsf{keyHasPurpose}(k ,\mathtt{sha256("CENTRIFUGE@SIGNING"))} )\\
+v & = 1 \\
+r &\ethleftarrow \textsf{keyIsRevoked}(k)\\
+r & = 0
 \end{split}
 \end{equation}
-\\
-%\textcolor{gray}{TODO:equation 115 is outdated.Add revoke check and Recover}.\\
-If the signature was signed with the purpose key for signing the signature is accepted by the mint method.
-
-\subsubsection{Uniqueness Enforcement}
-A document can have multiple different NFT's for different purposes. Nevertheless it should be not possible to mint the exact same NFT twice for the same document in the same registry. For example an NFT which could represent a payment obligation of an invoice should be only allowed to be minted once. For enforce the requirement the NFT id $T_{id}$ together with the NFT registry address needs to be part of the document. 
+%TODO:equation 115 is outdated.Add revoke check and Recover
+If the signature was signed with the purpose key for signing (recovered address) the signature is accepted as valid by the mint method.
+\subsubsection{Uniqueness Constraint}
+A document can have different NFTs minted. However an NFT registry can enforce that for a document $d$ it only has one token minted. This is done by adding the token to $d_{\mathtt{nfts}}$. 
 \begin{equation}
 \begin{split}
 N & = (N_{\mathtt{registry-id}}, N_{\mathtt{token-id}}) \\
@@ -148,27 +139,27 @@ N_{\mathtt{registry-id}} \in \mathbb{B}_{32}  \quad &\land \quad N_{\mathtt{toke
 d_{\mathtt{nfts}}& = (N_{[0]},...,N_{[n]})
 \end{split}
 \end{equation}
-A collaborator who wants to mint an NFT first needs to create a new document version $d'$.
+A collaborator who wants to mint an NFT first needs to create a new document version $d'$ that contains the token id, $N_{\mathtt{token-id}}$, and registry address, $N_{\mathtt{registry-id}}$.
 \begin{equation}
 \begin{split}
-N'_{\mathtt{token-id}} & = \texttt{RAND(32)}\\
-N'_{\mathtt{registry-id}} & = T_{\mathtt{registry-address}} \quad \| \quad \mathbb{B}_{12} \\
-N'  & = (N'_{\mathtt{registry-id}},N'_{\mathtt{token-id}}) \\
+N_{\mathtt{token-id}} & = \texttt{RAND(32)}\\
+N_{\mathtt{registry-id}} & = T_{\mathtt{registry-address}} \quad \| \quad \mathbb{B}_{12} \\
+N  & = (N_{\mathtt{registry-id}}, N_{\mathtt{token-id}}) \\
 d' & = d \\
-d'_{\mathtt{nfts}} & = \texttt{append}(d_{\mathtt{nfts}},N')
+d'_{\mathtt{nfts}} & = \texttt{append}(d_{\mathtt{nfts}}, N)
 \end{split}
 \end{equation}
-The new document version $d'$ needs to include the token id $T_{\mathtt{id}}$ which can be randomly chosen by
-the user and the registry address itself. In Protobuf definition of the document $d_{\mathtt{nfts}}$ is implemented as a map where the key is 32 bytes including the 20 bytes of the Ethereum registry address and 12 bytes of zeros in the end. The user needs to request the signatures of the collaborators and commit the new document version as described in a previous chapter. (See chapter \ref{sec:consensus})
+The new document version $d'$ needs to include the token id $T_{\mathtt{id}}$ which is randomly chosen and committed to by the user. 
+%TODO: Explain why this was done (to allow minting of more than one token per registry). Show that it is a map.
+In the Protobuf definition of the document $d_{\mathtt{nfts}}$ is implemented as a map where the key is 32 bytes including the 20 bytes of the Ethereum registry address and 12 bytes of zeros in the end. The user needs to request the signatures of the collaborators and commit the new document version as described in a previous chapter. (See chapter \ref{sec:consensus})
 \begin{equation}
 \begin{split}
 \mathcal{M}_{\texttt{proof}}(A_{\texttt{anchor-current}} ,P_{[\mathtt{nfts]{[registry-address]}}\mathtt{field}},P_{[\mathtt{nfts]{[registry-address]}}\mathtt{sibling-hashes}}) &= 1 \\
 P_{[\mathtt{nfts]{[registry-address]}}\mathtt{field.value}} &= T_{\mathtt{id}}
 \end{split}
 \end{equation}
-Inside the mint method a merkle proofs verifies that the provided $T_{id}$ is part of the document. A collaborator would not sign a new document version $d'$ if the current one already includes a token id for the same NFT registry. Without the signatures of the collaborators it is not possible to mint a token for the same registry twice.
-\subsubsection{Rule,Role and Read Action Proof}
-% \textcolor{gray}{TODO:explain read Rule}.
+Inside the mint method a Merkle proofs verifies that the provided $T_{id}$ is part of the document. A collaborator would not sign a new document version $d'$ if the current one already includes a token id for the same NFT registry. Without the signatures of the collaborators it is not possible to mint a token for the same registry twice.
+%TODO:  \subsubsection{Rule, Role and Read Action Proof}
 
 \subsection{Token Methods}
 The ERC721 standard defines the interface for a NFT registry.
@@ -183,11 +174,13 @@ A token can be transferred by the current owner to a different owner:
 \begin{equation}
 \mathsf{transferTo}(T_{\texttt{id}},T_{\texttt{owner}},T_{\texttt{new-owner}}) \xrightarrow[]{\text{ETH}}  \mathsf{NFTRegistry}
 \end{equation}
+
 \subsubsection{Metadata}
-\textcolor{gray}{TODO:explain metadata field}.
+The ERC721 standards defines a specific field called metadata which should contain a url for further information about the NFT itself.
 
 \subsection{Document Access}
-Over the life time of an NFT it can be transfered to different users and companies. A person or a user who owns an NFT has the option to request read access to the document which belongs to the NFT. The token owner needs to have a node and a DID. It is not required that the owner is in the list of document collaborators $d_{\mathtt{collaborators}}$.
+Over the life time of an NFT it can be transferred to different users and companies. A person or a user who owns an NFT has the option to request read access to the document which belongs to the NFT. The token owner needs to have a node and a DID. It is not required that the owner is in the list of document collaborators $d_{\mathtt{collaborators}}$.
+At the present time, there is no way of forcing the a node that has the document to make it available to an NFT owner.
 \begin{equation}
     \begin{split}
             (\mathtt{DID_{sender}},T_{\mathtt{id}},T_{\mathtt{registry-address}},d_{\mathtt{id}})& \xleftarrow[]{\text{P2P}}  \mathsf{receiveDocumentRequest}(\mathtt{DID_{sender}}) \\
@@ -201,7 +194,7 @@ If the following condition is true the $\mathtt{DID_{sender}}$ is a NFT owner of
      d_{\mathtt{nfts[T_{registry-address}]}} = T_{\mathtt{id}} \quad \land \quad T_{\mathtt{owner}} = \mathtt{DID_{sender}}
     \end{split}
 \end{equation}
-The provided token id $T_{\mathtt{id}}$ needs to be part of the document and the NFT owner in the registry needs to be the $\mathtt{DID_{sender}}$. If both requirements are fullfilled the document will be send.
+The provided token id $T_{\mathtt{id}}$ needs to be part of the document and the NFT owner in the registry needs to be the $\mathtt{DID_{sender}}$. If both requirements are fulfilled the document will be send.
 \begin{equation}
       \mathsf{send}(d) \xrightarrow[]{\text{P2P}} \mathtt{DID_{sender}}
 \end{equation}

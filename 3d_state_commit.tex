@@ -12,15 +12,17 @@ Every new document version $d'$ must commit its  document root hash $R_{\texttt{
 \begin{eqnarray}
 A &=& (A_{\texttt{anchor-id}}, A_{\texttt{anchor-root}}, A_{\texttt{anchor-blockheight}})\\
 A_{\texttt{anchor-id}} & = & d_{\texttt{current}} \\
-A_{\texttt{anchor-root}} & = & R_{\texttt{doc-root}}
+A_{\texttt{anchor-root}} & = & R_{\texttt{doc-root}} \\
+A_{\texttt{anchor-blockheight}} & = & \texttt{block.number}
 \end{eqnarray}
 \\
-The anchor id of a new document $d_{[i]{\texttt{current}}}$ is defined by the previous document $d_{[i-1]\texttt{next-img}}$ hash.
+The anchor id of a new document $d_{[i]{\texttt{current}}}$ is defined by the previous document $d_{[i-1]\texttt{next-img}}$. The same image is stored in the current 
+document in $d_{[i]\texttt{current-img}}$. The hash of the $d_{[i]\texttt{current-img}}$ defines the current document identifier and the anchor id.
 \begin{eqnarray}
 d_{[i]\texttt{current}}& = & \mathtt{sha256}(d_{[i-1]\texttt{next-img}})\\
 A_{\texttt{anchor-id}}& = & d_{[i]\texttt{current}}
 \end{eqnarray}
-
+The \texttt{block.number} contains the Ethereum block number the transaction got mined and acts as a timestamp for the anchor.
 \subsubsection{Verifying a document}
 Any user can verify the correctness of the document by comparing the root hash to the committed hash on chain. We formally define a method called $\mathsf{getAnchor}$ which returns an anchor from the contract.
 \begin{eqnarray}
@@ -29,37 +31,35 @@ A_{\texttt{anchor-next}} & \xleftarrow[]{\text{ETH}} & \mathsf{getAnchor}(d_{[i]
 \end{eqnarray}
 
 \subsubsection{Latest Version}
-Because in each state update the next anchor id is committed to already, anyone can verify that they have the latest version by checking the anchor registry. A document $d_{[i]}$ is the latest version if the following condition is true:
+Because in each document (state) update the next anchor id is already defined, anyone can verify that they have the latest version by checking the anchor registry. A document $d_{[i]}$ is the latest version if the following condition is true:
 \begin{equation}
 A_{\mathtt{anchor-current}} = R_{\mathtt{doc-root}} \quad \wedge \quad A_{\mathtt{anchor-next}} = 0
 \end{equation}
-
-If an anchor for $A_{\mathtt{anchor-next}}$ exists, the current document $d_{[i]}$ is not the latest version.
+If an anchor for $A_{\mathtt{anchor-next}}$ exists, the current document $d_{[i]}$ is not the latest version. It is not possible to overwrite an existing anchor id or invalid it. For committing an anchor the $d_{[i]\texttt{current-img}}$ is needed therefore only document collaborators could propose a next version.
 
 \subsubsection{Pre-Commit}
-A document is committed only after reaching consensus with the other collaborators on the document. Consensus is reached by getting a cryptographic signature from all other parties by sending them the signing root. To deny the counter-party the free option  of publishing its own state commitment upon receiving a request for signature, the node can first publish a pre-commit.
-A pre-commit locks a commit to a specific document state for a given anchor id for a predetermined number of blocks, $l$. Only the \texttt{msg.sender} of the pre-commit is allowed to commit a corresponding anchor before the pre-commit has expired.
+A document is committed only after reaching consensus with the other collaborators on the document. Consensus is reached by getting a cryptographic signature from other parties by sending them the signing root. To deny the counter-party the free option of publishing its own state commitment upon receiving a request for signature, the node can first publish a pre-commit.
+A pre-commit locks a commit to a specific document state for a given anchor id for a predetermined number of blocks. Only the \texttt{msg.sender} of the pre-commit is allowed to commit a corresponding anchor before the pre-commit has expired.
 
 \begin{equation}\\
     \mathsf{preCommit}(d_{[i]\texttt{current}},R_{\texttt{signing}}) \xrightarrow[]{\text{ETH}} \mathsf{AnchorRepository}
     %TODO: leftover? M_{\texttt{proof}}(R_{\texttt{doc-root}})
 \end{equation}\\
 The pre-commit stores the provided signing root $R_{\texttt{signing}}$ on the smart contract. Only a $R_{\texttt{doc-root}}$ in the commit which includes the same $R_{\texttt{signing}}$ is accepted as a valid commit. 
-It is not possible to provide a new preCommit $R_{\texttt{signing}}$ within the next 15 blocks for the given anchorId.\\
+It is not possible to provide a new preCommit $R_{\texttt{signing}}$ within the next  blocks for the given anchorId.\\
 In the event that the user does not provide a commit within the lock time, the commit will be unlocked, and the \texttt{preCommit} method will be open to everyone again.
 
 \subsubsection{Commit}
 The anchor registry's \texttt{commit} method does not have any restrictions, except for the pre-commit flow as described above. If no valid pre-commit exists, anyone can commit an anchor to the registry. A commit of a new anchor is described by the following function. 
 \begin{equation}\\
-    \mathsf{commit}(d_{[i-1]\texttt{next-img}},R_{\texttt{doc-root}},P_{\texttt{sign-proof}}) \xrightarrow[]{\text{ETH}} \mathsf{AnchorRepository}
+    \mathsf{commit}(d_{[i]\texttt{current-img}},R_{\texttt{doc-root}},P_{\texttt{sign-proof}}) \xrightarrow[]{\text{ETH}} \mathsf{AnchorRepository}
     %M_{\texttt{proof}}(R_{\texttt{doc-root}})
 \end{equation}\\
-\textcolor{gray}{TODO:In the latest implementation we store the next-img in the current document.  It is not needed anymore to access the previous document version to get the d\_next-img. The document d has d\_next-img and d\_current-img}.\\\\
 \textbf{Next Pre-Image }\\
-The commit method hashes $d_{[i−1]\texttt{next-img}}$ inside the smart contract to get the $A_{\texttt{anchor-id}}$. The $d_{[i−1]\texttt{next-img}}$ of the previous version is needed to commit the next version. It is not possible to use $d_{[i−1]\texttt{next}}$ (equal to $d_{[i]\texttt{current}}$) directly. In some cases, the field  $d_{\texttt{next}}$ is revealed to the outside world to proof the latest version of a document.(See NFT \ref{sec:nft}) An attacker could commit an malicious anchor for $d_{\texttt{next}}$ without the usage of $d_{\texttt{next-img}}$. The field $d_{\texttt{next-img}}$ is never revealed to the outside world. \\
+The commit method hashes $d_{[i−1]\texttt{next-img}}$ inside the smart contract to get the $A_{\texttt{anchor-id}}$. The $d_{[i−1]\texttt{next-img}}$ of the previous version is needed to commit the next version. It is not possible to use $d_{[i−1]\texttt{next}}$ (equal to $d_{[i]\texttt{current}}$) directly. In some cases, the field  $d_{\texttt{next}}$ is revealed to the outside world to prove the latest version of a document. (See \ref{sec:nft}). The anchor contract challenges the submitter to reveal the pre-image to avoid an attacker committing an malicious anchor for $d_{\texttt{next}}$. The field $d_{\texttt{next-img}}$ is never revealed to the outside world. \\
 \\
 \textbf{Signing Root Proof }\\
-In case a pre-commit exists for the \texttt{anchorId}, calculated by hashing the given pre-image, the \texttt{msg.sender} must the same as in the pre-commit. In the pre-commit, the signing-root $R_{\texttt{signing}}$ has been stored. A merkle proof verifies if the $R_{\texttt{signing}}$ is part of the $R_{\texttt{doc-root}}$ tree. $P_{\texttt{sign-proof}}$ is an array of $\mathbb{B}_{32}$ arrays which contains the needed sibling hashes for the merkle proof. 
+In case a pre-commit exists for the \texttt{anchorId}, calculated by hashing the given pre-image, the \texttt{msg.sender} must be the same as in the pre-commit. In the pre-commit, the signing-root $R_{\texttt{signing}}$ has been stored. A merkle proof verifies if the $R_{\texttt{signing}}$ is part of the $R_{\texttt{doc-root}}$ tree. $P_{\texttt{sign-proof}}$ is an array of $\mathbb{B}_{32}$ arrays which contains the needed sibling hashes for the merkle proof. 
 
 
 %TODO

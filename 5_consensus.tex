@@ -3,71 +3,13 @@
 In \ref{sec:doc_state_comm}, we introduced how state is committed to and in \ref{sec:particpiants}, we defined the attributes and behaviors of individual actors in the system. Building upon this, we now introduce our mechanism for enabling the reaching of consensus among different parties.
 \subsection{Consensus Trade-offs}
 For the initial protocol version we have decided to avoid a fully BFT consensus scheme. The protocol does not guarantee data availability for every participant. Instead, the focus is on preserving privacy in the optimistic case and requiring any consensus failures to be settled out of band. 
-
-\subsection{Roles and Rules}\label{sec:roles_rules}
-A document has a set of roles, $d_{\mathtt{roles}}$ and rules, $d_{\mathtt{rules}}$ that can be attached to a role. Nodes have particular roles, and the rules give them certain capabilities. They are listed in the set of $Role_{\mathtt{members}}$.
-
-\begin{eqnarray}
-Role &= &(Role_\mathtt{id},Role_{\mathtt{members}}) \\
-Role_{\mathtt{id}} &\in & \mathbb{B}_{32}\\
-Role_{\mathtt{members}}  &=& (Member_{[0]},...,Member_{[n]}) \\
-Member &\in & \{\mathtt{DID};\mathtt{access\_token};\mathtt{NFT}\} \\
-d_{\mathtt{roles}} & = & (Role_{[0]}, ..., Role_{[n]})
-\end{eqnarray}
-
-%\begin{eqnarray}
-%    Role & \equiv & (Role_{\mathtt{id}}, Role_{\mathtt{members}}, Role_{\mathtt{nfts}}) \\
- %   Role_{id} & \in & \mathbb{B}_{32} \\
-  %  Role_{\mathtt{members}} & \equiv &  (\mathtt{DID}_0, %..., \mathtt{DID}_n)\\
-  %  d_{\mathtt{roles}} & \equiv & (Role_1, ..., Role_n) \\
-%\end{eqnarray}
-
-\begin{comment}
-There are multiple ways a user, $u$ can be added to a $Role$. A collaborator can be directly added to the list or collaborators (\ref{eqn:user_in_role}). By proving ownership of an NFT that is part of the role (\ref{eqn:nft_in_role}) or by providing an access token that allows the user to assume the role. The latter two are included here for completeness but will be introduced in a later section. %TODO (Lucas): Add link to section
-
-\begin{eqnarray}
-%TODO: Maybe this is not the most helpful
-    u & \in & Role_{\mathtt{members}} \label{eqn:user_in_role} \\  
-    NFT & \in & Role_{\mathtt{nfts}} \label{eqn:nft_in_role} \\
-    t_{role} & = & Role_{id}
-\end{eqnarray}
-\end{comment}
-
-Rules give the linked roles certain capabilities on a document.  
-\begin{eqnarray}
-Rule & = & (Rule_{\mathtt{action}}, Rule_{\mathtt{roles}})\\
- Rule_{\mathtt{roles}} & = & (Role_{[0]}, ..., Role_{[n]}) \\
- Rule_{\mathtt{action}} & \in & \{\mathtt{invalid; read; read\_sign}\} \\
- d_\mathtt{rules} & = & (Rule_{[0]}, ..., Rule_{[n]})
-\end{eqnarray}
-
-%\begin{eqnarray}
-  %  Rule & \equiv & (Rule_{\mathtt{action}}, Rule_{\mathtt{roles}}) \\
-  %  Rule_{\mathtt{roles}} & \equiv & (Role_1, ..., Role_n) \\ 
-   % Rule_{\mathtt{action}} & \in & \{\mathtt{invalid, read, read\_sign}\} \\
-   % d_\mathtt{rules} & \equiv & (Rule_1, ..., Rule_n)
-%\end{eqnarray}
-
-\subsubsection{Collaborators and Readers}
-A document does not have global state and instead is only shared with a limited set of nodes. There are two groups of nodes that a document is shared with. The first group is comprised of nodes which are part of the consensus and will be asked to sign a document state. We refer to these nodes as collaborators, or $d_{\mathsf{collaborators}}$. The second group of nodes are ones that have the permission to read a document but not mutate it or sign any consensus update. We refer to the set of readers as $d_{\mathsf{readers}}$.\\
-\begin{eqnarray}
-d_{\mathtt{readers}} & = & \mathsf{getAllMembersWithAction}( d_\mathtt{rules} ,\mathtt{read}) \\
-d_{\mathtt{collaborators}} &  = & \mathsf{getAllMembersWithAction}( d_\mathtt{rules} ,\mathtt{read\_sign}) 
-\end{eqnarray}
-%\begin{eqnarray}
- %   Rules_{read\_sign} & = & \{r \in d_{\mathsf{rules}} |  r_{\mathtt{action}} = \mathtt{read\_sign} \}\\
-  %  Rules_{read} & = & \{Rule | Rule_{\mathtt{action}} = \mathtt{read} \}\quad \forall  Rule \in d_{\mathtt{rules}}\\
-   % d_{\mathtt{collaborators}} & \equiv & \{ Role_{\mathtt{members}} : Role \in Rule_{\mathtt{roles}} \}\quad\text{for}\quad Rule \in Rules_{read\_sign} \\
-    %d_{\mathtt{readers}} & \equiv & \{ Role_{\mathtt{members}} : Role \in Rule_{\mathtt{roles}} \}\quad\text{for}\quad Rule \in Rules_{read}
-%\end{eqnarray}
-
 \subsection{Reaching consensus on the document state}\label{sec:reach_consensus}
 When a collaborator wants to update the state and commit to a new version, the document changes are first sent to all collaborators on a document in order to collect the signatures by the collaborators. The collaborators sign the signing root, $R_{signing}$.
 
 In the following section, the pre-commit and commit is described. A user does not need to use a pre-commit and can commit a document state immediately. However this has drawbacks if there are byzantine nodes.
 
 \subsubsection{Consensus Protocol}
-Each collaborator is found in the P2P network and the new state is transmitted with a request to provide a signature. We define the user who initiates the state update as $\iota$ and collaborators $c_n$.
+Each collaborator, an identity $I$, is found in the P2P network and the new state is transmitted with a request to provide a signature. We define the user who initiates the state update as $\iota$ and collaborators $c_n$.
 \begin{eqnarray}
 \iota,c \in I\\
      d_{\mathtt{collaborators}} = (\iota, c_{[0]}, ..., c_{[n]})
@@ -79,7 +21,7 @@ We begin with a document $d$ that will be updated from $d_{[n]} \to d_{[n+1]}$ o
     d' & = & d_{[n+1]}
 \end{eqnarray}
 
-When proposing a new state $d'$, the user $\iota$ will set the field author to its $\mathtt{DID}$.
+When proposing a new state $d'$, the user $\iota$ will set the coredocument field author to its $\mathtt{DID}$.
 
 \begin{equation}
     {d'}_{\mathtt{author}} = \iota_{\mathtt{DID}}
@@ -92,18 +34,19 @@ The user $\iota$ first calculates the signing root, $R_{\mathtt{signing}}$ and s
      s & = & \mathsf{sign}(\iota_{\mathtt{k.sign}}, R_{\mathtt{signing}}) \\
     {d'}_{\mathtt{signatures}[\iota_{\mathtt{DID}]}} & = & s
 \end{eqnarray}
-The user then pre-commits to the state and gets signatures from all the collaborators. After a successful pre-commit, the node sends the new state $d'$ to all collaborators get their signature on the state.
+
+The user then pre-commits to the state and gets signatures from all the collaborators. After a successful pre-commit, the node sends the new state $d'$ to all collaborators and requests their signature on the new state.
 \begin{equation}
 \begin{split}
-s & \xleftarrow[]{\text{P2P}} \mathsf{requestSignature}(d', c) \qqquad \qqquad \qqquad \\
+s & \xleftarrow[]{\text{P2P}} \mathsf{requestSignature}(d', c) \qquad \qquad \qquad \\
 d'_{\mathtt{signatures}[c_{\mathtt{DID}}]} & =  \begin{cases}
   s, \quad \quad \text{if} \quad \mathsf{validateSignature}(c, R_{\mathtt{signing}}, s)  = 1 \\      
   \emptyset,  \quad\quad\text{else} \\
-\end{cases} \\ 
-& \textcolor{white}{xxxxxxxxxxxxxxxxxxx}\forall c \in d_{\mathtt{collaborators}} \setminus \{\iota\} %TODO: whitespace
+\end{cases} \textcolor{white}{x}\forall c \in d_{\mathtt{collaborators}} \backslash \{\iota\}
+%TODO: replace whitespace
 \end{split}
 \end{equation}
-If a collaborator refuses to sign, is unreachable or returns an invalid signature, it is not added to $d'_{\mathtt{signatures}}$. When all signatures have collected, or before the timeout for the pre-commit expires, the node commits to the state.
+If a collaborator refuses to sign, is unreachable or returns an invalid signature, it is not added to $d'_{\mathtt{signatures}}$. 
 \begin{comment}
 \begin{eqnarray}
     R_{\mathtt{doc-root}} = \mathsf{calculateDocumentRoot}(d') \\
@@ -130,21 +73,10 @@ The collaborator then verifies that there is a valid signature by the sender, $\
 \end{eqnarray}
 
 \subsubsection{Publishing the commit}
-\begin{comment}
-For each signature that the node receives from $\mathsf{send}$, it first validates the signature
-\newenvironment{rcases}
-  {\left.\begin{aligned}}
-  {\end{aligned}\right\rbrace}
-  
-\begin{equation}
-    \begin{rcases}
-        \mathsf{validateSignature}(c, R_{\mathtt{signing}}, s)  = 1\\
-        {d'}_{\mathtt{signatures}[c]} = s
-    \end{rcases}
-    \quad \forall (c, s)  S
-\end{equation}
-\end{comment}
-After receiving all the signatures or the before the timeout of the pre-commit the node finally calculates the document root and commits the anchor.
+
+When all signatures have been collected, or before the timeout for the pre-commit expires, the node commits to the state. 
+
+After receiving all the signatures or the before the pre-commit expires the node finally calculates the document root and commits the anchor.  In case of a timeout the node commmits only with the received signatures.
 \begin{eqnarray}
 R_{\mathtt{doc-root}} & = & \mathsf{calculateDocumentRoot}(d')\\
   \mathsf{commit}(d'_{\mathtt{next-img}}, R_{\mathtt{doc-root}},M_{\texttt{proofs}}) &\xrightarrow[]{\text{ETH}}& \mathsf{AnchorRepository}\\ 
@@ -168,12 +100,4 @@ After the user published the commit every collaborator should receive the final 
 \end{eqnarray}
 A collaborator can verify the received document $d'$ if actually an anchor has been committed and which other collaborators signed the document.
 
-\subsubsection{Consensus failure}
-Should one of the collaborators be unavailable or refuse to sign the proposed document update, the node will submit the new update on-chain without the signature of the offline node. There is no guarantee in the protocol that a node will collaborate at this point in time. If a signature is missing, it can mean one of following:
-\begin{description}
-    \item{\textbf{Offline}} The node was offline at the time of update
-    \item{\textbf{Denial of service}} The node refused to sign the update for selfish reasons
-    \item{\textbf{Consensus failure}} The node deemed the state transition to be invalid
-    \item{\textbf{Censorship}} The updating node didn't deliver the new state update to the counter-party
-\end{description}
-A third party can be used to act as a validator to mitigate some of these problems, but this is beyond the scope of the protocol in its current version. The primary objective of the protocol at this point is to reach consensus in an optimistic scenario. Should any of these happen, it will have to be dealt with out of band.
+

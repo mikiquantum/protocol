@@ -2,13 +2,11 @@
 % TODO (Manuel): Define cryptographic hash function
 % TODO (Lucas): we should add a section that introduces documents etc.
 \section{Document and state commitments}\label{sec:doc_state_comm}
-
 The Centrifuge protocol does not have the concept of a global state for documents. Instead, the state is only shared across collaborators of a single \textit{documents} which is the key component in the protocol.
 A document has a predefined schema to represent a specific document type, like a purchase order or an invoice. A Centrifuge node can create a document and share it with others. The transport of a document happens privately over secure channels in the P2P network. Every document collaborator keeps a local copy of a document in their storage. An update of a document can be triggered by multiple collaborators and is not restricted to the initial document creator. Whenever a change is made, a
 calculated merkle root of a document is committed on chain. A new version is only accepted by others if the document root hash exists in the \textit{AnchorRepository} and the set of mandatory document fields in the new version satisfy protocol-specific requirements.  A formal definition of the individual document components should expound the requirements of a valid new document state. 
-\newline
 \subsection{Conventions}
-\textcolor{gray}{TODO:explain the used notation}.
+We use the following conventions in the document. The lowercase letter $d$ indicates a document in Centrifuge. Together with a subscript lowercase letter a field in the document or in a set is described. For example $d_{\texttt{id}}$ refers to  the \textsc{ID} field in a document $d$.  Lowercase letters with square brackets indicate an index. For example $d_{[2]}$ refers to the third document in a row. Arrows are used to describe communication with Ethereum and other participants in the P2P network. The arrow $\xrightarrow[]{\text{ETH}}$ is used to refer to Ethereum and $\xrightarrow[]{\text{P2P}}$ for the P2P network communication. For example $a \xrightarrow[]{\text{P2P}} b$, the right arrow describes a message send from a to b over the P2P network. A left arrow would indicate a P2P request or a call on an Ethereum smart contract (For example:  $a \ethleftarrow b$).
 \subsection{Document}
 %---------------------------------------------------
 %----- Fields
@@ -23,14 +21,16 @@ F = (F_\texttt{name},F_\texttt{value},F_\texttt{salt}) \\
 F_{\texttt{name}} \in \mathbb{B} \wedge F_{\texttt{value}} \in \mathbb{B} \wedge  F_{\texttt{salt}} \in \mathbb{B}_{32} \\
 \end{array}
 \end{eqnarray}
-Elements of $\mathbb{B}$ are an arbitrary-length byte array. $\mathbb{B}_{32}$ describes the set of fixed 32 byte array. 
+Elements of $\mathbb{B}$ are an arbitrary-length byte array. Elements of $\mathbb{B}_{32}$ are a 32 byte array. 
 
 \subsubsection{Document}
 A document $d$  can be formally expressed as the union of the schema field set $S$ with a set of core fields called core document denoted as $C$.
+
+
 %TODO: add reference to centrifuge-protobufs
 
 \begin{equation}
-d \equiv S \cup  C
+d = S \cup  C
 \end{equation}
 For referring to all schema fields $S$ of document or to the core document fields $C$ we introduce the following notation
 \begin{eqnarray}
@@ -48,6 +48,8 @@ In the set of specific fields $S$ for a document $d$, every field has a unique f
 \begin{equation}
 F_{[i]} \in  S \Rightarrow F_{[i]\texttt{name}} \neq  F_{[j]\texttt{name}} \, ; \forall F_{[j]}  \in S, i \neq j 
 \end{equation}
+All participants in the protocol agree in advance on the schema of documents the would like to exchange. In addition to the predefined schema fields a schema could contain a set of customized attributes fields for required additional information.
+
 %\begin{equation}
 %\{x \in \{0..n\}| \nexist y \in \{0..n\}\x: F[x]_i=F[y]_i \land x & \neg & y \}
 %\end{equation}
@@ -56,17 +58,19 @@ F_{[i]} \in  S \Rightarrow F_{[i]\texttt{name}} \neq  F_{[j]\texttt{name}} \, ; 
 The core document $C$ defines the required fields for every document $d$.
 The core document contains signatures, hashes, and other relevant information that allows users to exchange any document data.
  
-We introduce the fields in $C$ step by step in the following section and define the required constraints of the core document fields. Variables denoted with $R_{\texttt{x}}$  are not part of the core document but are calculated based on core document fields. $R_{\texttt{x}}$ variables are needed for signing and for anchoring documents in the smart contract. A document field which is a core document field is denoted with $d_{\texttt{x}}$. 
+We introduce the fields in $C$ step by step in the following section and define the required constraints of the core document fields. Variables denoted with $R_{\texttt{x}}$ are derived from other fields but are themselves not persisted on the document. $R_{\texttt{x}}$ variables are needed for signing and for anchoring documents in the smart contract. A document field which is a core document field is denoted with $d_{\texttt{x}}$. 
 The core document\footnote{\url{https://github.com/centrifuge/centrifuge-protobufs/blob/master/coredocument/coredocument.proto}} includes other fields not mentioned in this section which are introduced in the following sections step by step.
 \begin{description} 
 \item{\textbf{Identifier}} a $\mathbb{B}_{32}$ value defines the unique identifier of a document, formally $d_{\texttt{id}}$ 
 \item{\textbf{Current Version}} a $\mathbb{B}_{32}$ value defines a unique id for the current version of a document, formally as $d_{\texttt{current}}$
+\item{\textbf{Current Version Pre Image}} is a $\mathbb{B}_{32}$ value needed to define the current version of a document,  formally as $d_{\texttt{current-img}}$
 \item{\textbf{Previous Version}} a $\mathbb{B}_{32}$ value needed to refer to the previous version of a document, formally as $d_{\texttt{prev}}$
-\item{\textbf{Next Version Pre Image}} is a $\mathbb{B}_{32}$ value needed to define the next version of a document,  formally as $d_{\texttt{next-img}}$
+\item{\textbf{Next Version Pre Image}} is a randomly chosen $\mathbb{B}_{32}$ value needed to define the next version of a document. This should be kept private to collaborators who can update the state. Formally as $d_{\texttt{next-img}}$
 \item{\textbf{Next Version}} a $\mathbb{B}_{32}$ value defines a unique identifier for the next version of a document, formally $d_{\texttt{next}}$
 \item{\textbf{Document Root}} a $\mathbb{B}_{32}$ value defines a root hash for document, formally $R_{\texttt{doc-root}}$
 \item{\textbf{Signing Root}} a $\mathbb{B}_{32}$ value defines the root hash of the Merkle tree containing all fields except for the signatures, formally $R_{\texttt{signing}}$
 \item{\textbf{Signatures}} a set of signatures of the signing root denoted as $d_{\texttt{signatures}}$
 \item{\textbf{Previous Root}} a $\mathbb{B}_{32}$ value defines the document hash of the previous version of the document. The previous root denoted as $d_{\texttt{prev-root}}$
+\item{\textbf{Nonce}} is a $\mathbb{B}_{32}$ value needed to indicate the version history of a document,  formally as $d_{\texttt{nonce}}$
 \end{description}
 

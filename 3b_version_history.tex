@@ -31,9 +31,9 @@ Every document in a version history $H$ must have the same identifier.
 \{d_{[i]} \in H \mid \forall d_{[j]} \in H :d_{[i]\texttt{id}} = d_{[j]\texttt{id}} \}
 \end{equation}
 \newline
-The next version field of a document must be equal to the current version field of the successor document.
+The current version field of a document must be equal to the next version field of the previous document.
 \begin{equation}
-d_{[i]\texttt{next}} = d_{[i+1]\texttt{current}} 
+d_{[i]\texttt{current}} = d_{[i-1]\texttt{next}} 
 \end{equation}
 \newline
 The previous version field of a document must be equal to the current version field of the predecessor document.
@@ -46,20 +46,27 @@ The previous root hash of a document must be equal to the document root hash of 
 d_{[i]\texttt{prev-root}} = d_{[i-1]\texttt{doc-root}}
 \end{equation}
 \newline
-The history of the document can therefore be seen as a doubly linked list. Every document has the document hash $D_{\texttt{previous}}$ of the predecessor document and defines the $D_{\texttt{id}}$ of the next one. A node which performs a document update defines the the next version identifier $D_{\texttt{next}}$.
+The current pre-image of a document must be equal to the next pre image of the predecessor document.
 \begin{equation}
-d_{[i]\texttt{next-img}} = \texttt{RAND32()}
+d_{[i]\texttt{current-img}} = d_{[i-1]\texttt{next-img}}
+\end{equation}
+\newline
+The history of the document can therefore be seen as a doubly linked list. Every document has the document hash $d_{\texttt{previous}}$ of the predecessor document and defines the $d_{\texttt{id}}$ of the next one.\\\\
+A node which performs a document update defines the the next version identifier $d_{\texttt{next}}$.
+\begin{equation}
+d_{[i]\texttt{next-img}} = \texttt{RAND(32)}
 \end{equation}
 \begin{equation}
 d_{[i]\texttt{next}} = \mathtt{sha256}(d_{[i]\texttt{next-img}})
 \end{equation}
 \newline
-The field $D_{\texttt{next-img}}$ is needed for commit reveal scheme in the \textit{AnchorRepository} to prevent malicious anchoring of documents by non-collaborators. The function $\texttt{RAND32()}$ is a cryptographically secure random function and returns a byte 32 array. The function $\mathtt{sha256}$ denotes hash function SHA-2 256.
-\\\\By referencing the previous root each state $d$, the history becomes an immutable attribute committed to in each version. To traverse the history $H$, one can follow the $d_{\mathtt{prev-root}}$ and $d_{\mathtt{prev}}$. To move forward in the list of history, $H$, one can go from $d_{\mathtt{next}}$ to $d_{\mathtt{current}}$.
+The field $d_{\texttt{next-img}}$ is needed to prevent malicious anchoring of documents by non-collaborators. The value therefore must be kept secret from any non-collaborators. The function $\texttt{RAND(32)}$ is a cryptographically secure random function and returns a byte 32 array. The function $\mathtt{sha256}$ denotes hash function SHA-2 256. 
+
+By referencing the previous root each state $d$, the history becomes an immutable attribute committed to in each version. To traverse the history $H$, one can follow the $d_{\mathtt{prev-root}}$ and $d_{\mathtt{prev}}$. To move forward in the list of history, $H$, one can go from $d_{\mathtt{next}}$ to $d_{\mathtt{current}}$.
 \begin{figure}[thpb]
   \centering
   \includegraphics[width=16cm]{img/documents-history-v2.png}
-  \caption{Doubly linked list of different versions of a document} 
+  \caption{Doubly linked list of different versions of a document. Indicating the relationship between different document index fields. The document root $R_{\texttt{doc-root}}$ is stored in the anchor registry and not in the document itself.} 
   \label{fig:documents}
 \end{figure}
 

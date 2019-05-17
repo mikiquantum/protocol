@@ -1,41 +1,47 @@
-\section{Validators}
+\section{Validators and Rules}
 A collaborator should only sign a state update, as described in \ref{sec:reach_consensus}, if it is considered to be valid. In the following paragraphs, we describe both the protocol-level validation rules as well as document-specific rules.
 
 \subsection{Protobuf Validation}
 A document consists of two parts. The schema fields (Sec. \ref{sec:doc_schema_fields}) depend on the document type (e.g. \textit{Purchase Order}, \textit{Invoice}). The core document fields (Sec. \ref{sec:doc_core_doc_fields}) are part of every document. Protobuf's schema definitions provides significant built-in validation by enforcing types and fields. When exchanging the document via P2P messages, they are marshalled into the protobuf byte format and thus type-enforced. We will skip over these validation rules and assume that a user would always reject a document that is an invalid protobuf message.
 
-\subsection{Schema Validation}
+\subsection{Schema and Base Validation}
 A validator defines a set of transition rules for a document field or a set of document fields. For example, it would be not allowed to change the order quantity field of a purchase order to a negative value. Formally, a validator $V$ is a function which has as an input the current document $d$ and the next document $d'$.
-
 \begin{eqnarray}
 v & = & \mathsf{V}(d, d') \\
  v &\in & \{0,1\}
 \end{eqnarray}
 The output of a validator function $V$ is either $1$ for accepted or $0$ for denied. If the field transitions are described in the validator $V$ the validator returns $1$.
-The validator $V$ must also define case $d = \emptyset$ for a given first version of a document.
-
-Every document of a specific schema $\Upsilon$  has a set of different document validators for describing a document schema like invoice or purchaseorder.
+The validator $V$ must also define case $d = \emptyset$ for a given first version of a document. 
+\subsubsection{Base Validation}
+Every document has the same set of base validators $B$. The base valdiators check the core document conditions introduced in section \ref{sec:version_history}. 
 \begin{equation}
-     \Upsilon = (V_0,...,V_n) 
+     B = (V_0,...,V_n) 
 \end{equation}
-We define a $\mathsf{validateSchema}$ which evaluates all Validators $V$ of a schema $\Upsilon$
-
+\subsubsection{Schema Validation}
+ Together with the base validators every schema has $S$  has a set of different document validators for describing a document schema like invoice or purchase order. 
+\begin{equation}
+     S = (V_0,...,V_n) 
+\end{equation}
+We define a $\mathsf{validation}$ which evaluates all Validators $V$ in a set $\Upsilon$.
+\begin{equation}
+     \Upsilon = B \cup S
+\end{equation}
 \begin{equation}
 \begin{split}
-   \mathsf{validateSchema}(d_S,d'_S,\Upsilon) =\prod_{i=0}^{n} V_i(d, d')  \qquad \forall V \in \Upsilon
+   \mathsf{validation}(d,d',\Upsilon) =\prod_{i=0}^{n} V_i(d, d')  \qquad \forall V \in \Upsilon
     \end{split}
 \end{equation}
 All validators need to accept the proposed document $d'$. Otherwise, the function will return $0$ for denied.
 \begin{equation}
-  \mathsf{validateSchema}(d_S,d'_S,\Upsilon) = 1
+  \mathsf{validation}(d,d',\Upsilon) = 1
 \end{equation}
  In the special case of the first document $d_{[0]}$, schema validation must occur.
 \begin{equation}
-  \mathsf{validateSchema}(\emptyset, d'_S,\Upsilon) = 1 \quad \text{for} \quad  d' = d_{[0]}
+  \mathsf{validation}(\emptyset, d',\Upsilon) = 1 \quad \text{for} \quad  d' = d_{[0]}
 \end{equation}
 
 \subsection{Validate Rules}
-A document has specific rules which define the read and write permissions field by field. A rule defines a set of roles which are allowed to write, read or should sign a document. (See Section:  \ref{sec:roles_rules}) A proposed new document $d'$ is not allowed to violate the rules. Therefore for each changed field in the document $d'$ the the rules need be evaluated.
+A document has specific rules which define the read and write permissions field by field. A rule defines a set of roles which are allowed to write, read or should sign a document. A proposed new document $d'$ is not allowed to violate the rules. Therefore for each changed field in the document $d'$ the the rules need be evaluated.
 
 \begin{equation}
  \begin{split}
@@ -44,12 +50,75 @@ A document has specific rules which define the read and write permissions field 
  \end{split}
 \end{equation}
 
-The rules together with specific field are also used to implement document acceptance on the business layer. Let's say a invoice document has two defined roles, one for the supplier and one for the buyer. The invoice could have a specific field \textit{buyer-accepts-invoice} together with a specific rule which allows only members of the role buyer to modify it. In case the supplier wants to set the field to true the buyer would reject the signature. 
-
-\subsection{Validate Function}
-A user only signs the signing root of a document  only if all validators in the schema are accepted and if no document rule is violated.
+\subsubsection{Roles}\label{sec:roles_rules}
+Every document can have a set of roles. Defined as $d_{\mathtt{roles}}$
+\begin{eqnarray}
+d_{\mathtt{roles}} & = & ({\rm I\!R}_{[0]}, ..., {\rm I\!R}_{[n]})
+\end{eqnarray}
+Roles are used to define different groups of document collaborators.
+Every document has at least one role with a single member.
+\begin{eqnarray}
+{\rm I\!R} &= &({\rm I\!R}_\mathtt{id},{\rm I\!R}_{\mathtt{members}}) \\
+{\rm I\!R}_{\mathtt{id}} &\in & \mathbb{B}_{32}\\
+{\rm I\!R}_{\mathtt{members}}  &=& (M_{[0]},...,M_{[n]})
+\end{eqnarray}
+%$d_{\mathtt{roles}}$ and rules, $d_{\mathtt{rules}}$ that can be attached to a role. Nodes have %particular roles, and the rules give them certain capabilities. They are listed in the set of %$Role_{\mathtt{members}}$.
+A member of a role can be the $\mathtt{DID}$ of another Centrifuge user or an access token. Which would allow the holder of the token to be part of the role. The third possible member of a role is the owner of an NFT, which could represent the document on-chain.
 \begin{equation}
- \mathsf{validate}(d,d') =\mathsf{validateSchema}(d,d',\Upsilon) * \mathsf{validateRules}(d,d',d'_{\mathtt{author}},d'_{\mathtt{rules}}) \\
+M \in  \{\mathtt{DID};\mathtt{access\_token};\mathtt{NFT}\}
+\end{equation}
+
+%\begin{eqnarray}
+%    Role & \equiv & (Role_{\mathtt{id}}, Role_{\mathtt{members}}, Role_{\mathtt{nfts}}) \\
+ %   Role_{id} & \in & \mathbb{B}_{32} \\
+  %  Role_{\mathtt{members}} & \equiv &  (\mathtt{DID}_0, %..., \mathtt{DID}_n)\\
+  %  d_{\mathtt{roles}} & \equiv & (Role_1, ..., Role_n) \\
+%\end{eqnarray}
+
+%\begin{comment}
+%There are multiple ways a user, $u$ can be added to a $Role$. A collaborator can be directly %added to the list or collaborators (\ref{eqn:user_in_role}). By proving ownership of an NFT %that is part of the role (\ref{eqn:nft_in_role}) or by providing an access token that allows %the user to assume the role. The latter two are included here for completeness but will be %introduced in a later section. %TODO (Lucas): Add link to section
+
+%\begin{eqnarray}
+%TODO: Maybe this is not the most helpful
+%    u & \in & Role_{\mathtt{members}} \label{eqn:user_in_role} \\  
+%    NFT & \in & Role_{\mathtt{nfts}} \label{eqn:nft_in_role} \\
+%    t_{role} & = & Role_{id}
+%\end{eqnarray}
+%\end{comment}
+\subsubsection{Rules}
+Rules give the linked roles certain capabilities on a document. Like read or write access to a document. The rules are denoted as $d_\mathtt{rules}$
+\begin{equation}
+ d_\mathtt{rules}  =  (R_{[0]}, ..., R_{[n]})
+\end{equation}
+\begin{eqnarray}
+R & = & (R_{\mathtt{action}}, R_{\mathtt{roles}})\\
+R_{\mathtt{roles}} & = & ({\rm I\!R}_{[0]}, ..., {\rm I\!R}_{[n]}) \\
+R_{\mathtt{action}} & \in & \{\mathtt{read; read\_sign;write}\} \\
+\end{eqnarray}
+
+%\begin{eqnarray}
+  %  Rule & \equiv & (Rule_{\mathtt{action}}, Rule_{\mathtt{roles}}) \\
+  %  Rule_{\mathtt{roles}} & \equiv & (Role_1, ..., Role_n) \\ 
+   % Rule_{\mathtt{action}} & \in & \{\mathtt{invalid, read, read\_sign}\} \\
+   % d_\mathtt{rules} & \equiv & (Rule_1, ..., Rule_n)
+%\end{eqnarray}
+
+\subsubsection{Collaborators and Readers}
+A document does not have global state and instead is only shared with a limited set of nodes. There are two groups of nodes that a document is shared with. The first group is comprised of nodes which are part of the consensus and will be asked to sign a document state. We refer to these nodes as collaborators, or $d_{\mathsf{collaborators}}$. The second group of nodes are ones that have the permission to read a document but not mutate it or sign any consensus update. We refer to the set of readers as $d_{\mathsf{readers}}$.\\
+\begin{eqnarray}
+d_{\mathtt{readers}} & = & \mathsf{getAllMembersWithAction}( d_\mathtt{rules} ,\mathtt{read}) \\
+d_{\mathtt{collaborators}} &  = & \mathsf{getAllMembersWithAction}( d_\mathtt{rules} ,\mathtt{read\_sign,write}) 
+\end{eqnarray}
+%\begin{eqnarray}
+ %   Rules_{read\_sign} & = & \{r \in d_{\mathsf{rules}} |  r_{\mathtt{action}} = \mathtt{read\_sign} \}\\
+  %  Rules_{read} & = & \{Rule | Rule_{\mathtt{action}} = \mathtt{read} \}\quad \forall  Rule \in d_{\mathtt{rules}}\\
+   % d_{\mathtt{collaborators}} & \equiv & \{ Role_{\mathtt{members}} : Role \in Rule_{\mathtt{roles}} \}\quad\text{for}\quad Rule \in Rules_{read\_sign} \\
+    %d_{\mathtt{readers}} & \equiv & \{ Role_{\mathtt{members}} : Role \in Rule_{\mathtt{roles}} \}\quad\text{for}\quad Rule \in Rules_{read}
+%\end{eqnarray}
+\subsection{Validate Function}
+A user signs the signing root of a document only if all validators in the schema are accepted and if no document rule is violated.
+\begin{equation}
+ \mathsf{validate}(d,d') =\mathsf{validation}(d,d',\Upsilon) * \mathsf{validateRules}(d,d',d'_{\mathtt{author}},d'_{\mathtt{rules}}) \\
  \end{equation}
     \begin{equation}
  \mathsf{validate}(d,d') = 1
@@ -57,8 +126,30 @@ A user only signs the signing root of a document  only if all validators in the 
 
 \subsubsection{Validation}
 If the user has both the previous and the current version of the document, it will sign off on the state update. A document signature of a collaborator on both $d$ and $d\prime$ means the collaborator validated both the format of $d$ and $d\prime$. It also indicates that the user has validated that no validation rules were violated transitioning from $d$ to $d\prime$.
+\subsubsection{Document Signature}
+As part of the consensus scheme other collaborators need to sign the signing root of a document. Adding a signature signals that the collaborator received the document and accepted the changes from $d$ to $d'$ according to the $\mathsf{validate}$ function. However it is needed to differentiate between new collaborators and collaborators with the full version history $H$.
+\subsubsection{New Collaborator Signature}
+During the life span of a document, new collaborators could be added or existing once removed. A newly added collaborator can only validate the received new document $d'$ and not the transfer from $d$ to $d'$ which some validations $V$ require. Therefore a signature contains the $d_{\mathtt{nonce}}$ of the earliest version a collaborator received. For example a nonce value of zero would indicate that a collaborators validated based on the entire document history.
+A new collaborator with access rights to previous versions would request older versions to completely validate the document history before adding the signature.
+\subsubsection{Document Acceptance}
+Adding a signature to a document doesn't mean a collaborator accepted the content of document from a business perspective. It only means the collaborator received the document and the proposed changes are not violating any document rules or validations. (See section \ref{sec:roles_rules}).\\\\ A collaborator could for example receive a valid invoice document which would be signed during the document consensus but the invoice is not automatically accepted. The acceptance of a document requires an additional active document update step from a collaborator.  For accepting a document an additional attribute field is used for document acceptance. The collaborator creates an additional signature of all the field which are accepted.\\
+\begin{eqnarray}
+m  & = & (d_{\mathtt{id}},d_{\mathtt{current}},(F_{[0]},...,F_{[n]}))\\
+s & = &  \mathtt{SIGN}(m,k_{\mathtt{sign}}) \\
+d_{\mathtt{accepted_{[did]}}} & = & (d_{\mathtt{id}},d_{\mathtt{current}},m,s)
+\end{eqnarray}\\
+Together with the $d_{\mathtt{id}}$ and $d_{\mathtt{current}}$ the signature $s$ and the message $m$ are added as value of the attribute field. The document identifiers are required otherwise the signature could be copied from other documents. A signature from a valid signing key of a collaborator in the $d_{\mathtt{accepted}}$ attribute field of an anchored document version indicates an acceptance of specific fields.
 
+%\textcolor{red}{TODO:move to new signature section}
+%The rules together with specific field are also used to implement document %acceptance on the business layer. Let's say a invoice document has two defined %roles, one for the supplier and one for the buyer. The invoice could have a %specific field \textit{buyer-accepts-invoice} together with a specific rule %which allows only members of the role buyer to modify it. In case the supplier %wants to set the field to true the buyer would reject the signature. 
 
- 
- 
- 
+\subsubsection{Consensus failure}
+The current design of the consensus protocol  does not covers TODO
+Should one of the collaborators be unavailable or refuse to sign the proposed document update, the node will submit the new update on-chain without the signature of the offline node. There is no guarantee in the protocol that a node will collaborate at this point in time. If a signature is missing, it can mean one of following:
+\begin{description}
+    \item{\textbf{Offline}} The node was offline at the time of update
+    \item{\textbf{Denial of service}} The node refused to sign the update for selfish reasons
+    \item{\textbf{Consensus failure}} The node deemed the state transition to be invalid
+    \item{\textbf{Censorship}} The updating node didn't deliver the new state update to the counter-party
+\end{description}
+A third party can be used to act as a validator to mitigate some of these problems, but this is beyond the scope of the protocol in its current version. The primary objective of the protocol at this point is to reach consensus in an optimistic scenario. Should any of these happen, it will have to be dealt with out of band.

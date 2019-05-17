@@ -1,4 +1,4 @@
-#  Centrifuge Protocol Yellow Paper
+#  Centrifuge Protocol Paper
 To read the latest PDF version of the paper, check out the [releases on github](https://github.com/centrifuge/protocol/releases)
 
 ## Building 

@@ -1,6 +1,5 @@
 \section{P2P Wire Protocol}
-
-\textcolor{gray}{TODO:some diagrams to show interactions as well as formally defining p2p node interactions}.
+%TODO:some diagrams to show interactions as well as formally defining p2p node interactions
 
 Nodes on the Centrifuge peer to peer network communicate using the Centrifuge Wire Protocol, which utilizes libp2p\footnote{\url{https://libp2p.io/}} streams as the underlying network transport layer.
 
@@ -26,17 +25,16 @@ libp2p defines a common network security transport interface. Centrifuge uses th
 Once the shared secret key is established, it is used for encryption of all traffic on the channel. A brief description about libp2p encryption philosophy is available in the encryption spec\footnote{\url{https://github.com/libp2p/specs/blob/master/3-requirements.md\#33-encryption}}.
 
 \subsubsection{Stream Multiplexing}
-
 The ability to multiplex protocols at multiple levels of the networking stack is a defining characteristic of libp2p with multi-multiplexing features\footnote{\url{https://github.com/libp2p/specs/blob/master/3-requirements.md\#32-multi-multiplexing}}. Multiplexed protocol identifiers are strings in the form \texttt{/protocol-name/<optional string1>/../<optional string n>}. For example, \texttt{/http/v2}. A program can register handlers for each of these protocols in the libp2p host and it will take care of routing the messages of a protocol to the appropriate handler. 
 
-Centrifuge uses TCP level stream multiplexing with libp2p to support multiplexing of stream traffic intended for different Centrifuge accounts (\texttt{DID}s) to a single TCP port in a node. Refer section \ref{multi account} for more details.
+Centrifuge uses TCP level stream multiplexing with libp2p to support multiplexing of stream traffic intended for different Centrifuge accounts (\texttt{DID}s) to a single TCP port in a node. Refer section \ref{sec:p2p_multi_account} for more details.
 
 \subsection{Associating a Node(PeerID) with a DID}\label{did-node}
 
 An identity on the Centrifuge network needs to be associated with a node in order for it to be able to perform Centrifuge-specific actions such as creating and signing documents. As introduced in section \ref{sec:node_id}, a node's public key serves as its identity on the Centrifuge network. Therefore, to associate a node to a DID, the DID identity contract (appendix \ref{sec:identity_contract}) on Ethereum stores its associated node's public key(ed25519) with the purpose ID - \texttt{P2P\_DISCOVERY}. From the DID perspective, this key is known as the \texttt{P2P Discovery Key}, as any known Centrifuge DID can be looked up for its associated p2p node id using the method \texttt{getKeyByPurpose} with the purpose ID - \texttt{P2P\_DISCOVERY} (refer section \ref{sec:key_types}). TODO explain that its only one to one association right now
 
 
-\subsection{Multi-account(DID) handling} \label{multi account}
+\subsection{Multi-account(DID) handling} \label{sec:p2p_multi_account}
 
 A node in the Centrifuge network can identify traffic associated with a single DID even at the wire protocol level. This is achieved through the use of libp2p stream multiplexing. A protocol identifier on Centrifuge networks is of the form \texttt{/centrifuge/<protocol-version>/<DID>}. Therefore, once a node has received a request and established a connection with a certain protocol identifier, for example \texttt{/centrifuge/v0.0.1/0x5571ecda2005a9B005014817607d02b4E1B7eAff}, it needs to:
 \begin{enumerate}

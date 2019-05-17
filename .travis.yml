@@ -1,16 +1,15 @@
 sudo: required
-dist: trusty # Ubuntu 14.04
-services: docker # Enables docker
+dist: trusty
+services: docker
 setup:
-    - docker pull blang/latex:ctanfull
+- docker pull blang/latex:ctanfull
 script:
-    - docker run --rm -i --user="$(id -u):$(id -g)" --net=none -v "$PWD":/data "blang/latex:ctanfull" latexmk -pdf -outdir=./build
+- "./build.sh"
 deploy:
   skip_cleanup: true
   provider: releases
   api_key:
-    secure: Z1CWJTOSwngP1EkYXKoWjXcCpN5EltrKL7VsgEJots+akjiyNLYV+/mt07gY6mI1Xjlxh8vSJOqWmoXgyyYYOEKnPZ7ESHPtov+JDxgmNvNvrA+5HGmltElQGtEVcN99OqUq4dK0tV+iaJb4aNiHiXLdswbisxvwG+3pgQeUeuM26wWfJMcQY7GoNfxBse/58GFrqNfQkyrsESzW9mp7952eg2dm0HpMQ2cK3O+vhaeziQ97sTRJNbqhFxa8AVxWMEoYeHPOHMYWVSWbkpZxWPsT7lGSQGkJIH0J0Dujd9Se2GrwcPP0I81A0Kc7m2E6xyA8EETrfkHYr31N57nJk/BA8ylxinWh5Ee6OUxTxTX2m4MZ+qyeZN+XsrjYOLg4wE17v6vt1Gqgg55u0zPA8O8T8I+ioMWb2xUsX/rxEJ42tGB/fMC7dnwTkKqDpU7oaGJyP4hWr/oB+9NAsvIOiJqfDh7rQc8nw90J5HPgcPCD1KWMfErDufwMmdzuFjNCURds8ungmBZ7x2quVrSeHEVl0Ny5clGr3ElD+Prm3eAAr/FDGGx7BcA+1oldhrvuO0tBTFwVm6WfDvsewUIp9v8yXgLvb/Qt1jNR/Of2U+lI7uU+w6a9UqrkCNdFKPIuZacgNUKy/Hj2ngA5083AQ4g4aUckmonWGM91q4ga6pQ=
-  file: build/main.pdf
+    secure: FOK4ZwG+PXXJLgJ3O3v18/mUwRuX6oncz1q8/9jUN05uGSW2clC8DTzj9OL+x3tEtPOCTPj2fpYdmYMwbhVwzZ17hQKqX+SMZoyJlXfI1DBOID9GCGdr6UN6+N96qCFLQStz5ymFfUvlCMyeMXvCaK5AqCuk2IRJPKXb3WAY9iSV07sqrF1CDwL5/hNE8XFbUrFG5whItAuKrXlkywqVYiL7qTfmz5OJ/AjzvB5ybt0Bc/M2Kj7vTjq20FJ9x+IUsE4jn7hDyLEiEX3djvHuzwIxpdHRvPKiOn9NbuCuOnGaDCq9Q5o9OQCjhnNcwZ9khotd9dFGRmW766Ouf02ZQmkJLjQwJQkKIWGkOadWhzsvuByDQD/Fx0Kumky5MdGsfp+/6YYjiBAqUAKVSfsQSIxayrGcykIHf27DW1tS/hblnfjWqIIDFYYxMZH7sNmsp2EQv8PDF4fQG32Xin6JWiNT4nJLQK2nqlTxTmmaoGtXZmjYIZqHRKQLEeZ/WYwH+xxT93SHp4MrwrYLFvTABH/nEvxIN3cvOon4cLO78vde9Ce2vbU306T4KjpgbuC4ThfcaKoLTeoRiKcTLFyFul+DN6+Itno9Gd52VCpZeo+s8ZQPvrJXw2bijMI9KeCYj2/9+wT+YvcvBYeua/zYiVKpo63Fqfst4rPDGhRcvyc=
+  file: build/centrifuge-protocol.pdf
   on:
     tags: true
-  
