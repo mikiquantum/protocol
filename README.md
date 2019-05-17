@@ -1,5 +1,5 @@
 #  Centrifuge Protocol Yellow Paper
-To read the latest PDF version of the paper, check out the [releases on github](https://github.com/centrifuge/yellowpaper/releases)
+To read the latest PDF version of the paper, check out the [releases on github](https://github.com/centrifuge/protocol/releases)
 
 ## Building 
 The easiest way to generate a PDF out of the tex file is with docker:
