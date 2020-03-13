@@ -61,7 +61,7 @@ During the life span of a document, every version can be shared with a different
     d_1 & \xrightarrow[]{\text{P2P}} [c_0, c_1, c_2]
 \end{eqnarray}
 In this scenario, $c_0$ and $c_1$ can validate the state transition between version $d_0$ and $d_1$, since they have access to both versions. \\
-On the other hand, $c_2$ will only have access to version $d_1$ of the document and will not be able to validate a transition. On the other hand, $c_2$ can still check that the current version is valid and therefore be part of the document consensus flow. \\
+On the other hand, $c_2$ will only have access to version $d_1$ of the document and will not be able to validate a transition. Although, $c_2$ can still check that the current version is valid (more details in section \ref{sec:doc_validation}), and therefore be part of the document consensus flow. \\
 It is important for the protocol and upstream applications to know when a particular collaborator was able to validate a transition, so more restrictive or critical logic can be built on top. \\
 To address this, we added a flag that will be appended to the signature payload described below:
 \begin{equation}
@@ -76,7 +76,7 @@ d'_{t} & =  \begin{cases}
 \subsubsection{Receiving a signature request}
 The collaborator $c$ that receives the signature request first validates the update by comparing the proposed updated document to the previous version of the document that it has in store. 
 \begin{eqnarray}
-   d' & \xleftarrow[]{\text{P2P}} & \mathsf{recieve}(\iota) \\
+   d' & \xleftarrow[]{\text{P2P}} & \mathsf{receive}(\iota) \\
     d & = &\mathsf{load}(c, {d'}_{\mathtt{prev}}) \\
     \mathsf{validate}(d, d') & = & 1 
 \end{eqnarray}
